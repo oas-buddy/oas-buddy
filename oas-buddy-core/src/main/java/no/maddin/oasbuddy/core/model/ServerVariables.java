@@ -3,7 +3,6 @@ package no.maddin.oasbuddy.core.model;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -22,11 +21,7 @@ public final class ServerVariables {
 
     /** Every key, including one whose value is not an object, so the file is never hidden from the user. */
     public List<String> names() {
-        List<String> names = new ArrayList<>();
-        if (server.get(FIELD) instanceof ObjectNode variables) {
-            variables.fieldNames().forEachRemaining(names::add);
-        }
-        return names;
+        return JsonNodes.fieldNames(server.get(FIELD));
     }
 
     /** The named variable, or {@code null} if it is absent or not an object. */

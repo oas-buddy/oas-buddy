@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.node.TextNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public final class Schema {
@@ -231,15 +230,7 @@ public final class Schema {
     }
 
     public List<String> propertyNames() {
-        List<String> names = new ArrayList<>();
-        var existing = node.get("properties");
-        if (existing instanceof ObjectNode objectNode) {
-            Iterator<String> it = objectNode.fieldNames();
-            while (it.hasNext()) {
-                names.add(it.next());
-            }
-        }
-        return names;
+        return JsonNodes.fieldNames(node.get("properties"));
     }
 
     public Schema getProperty(String name) {
@@ -248,7 +239,7 @@ public final class Schema {
             return null;
         }
         var existing = objectNode.get(name);
-        return existing instanceof ObjectNode propertyNode ? new Schema(propertyNode) : null;
+        return JsonNodes.wrap(existing, Schema::new);
     }
 
     public Schema addProperty(String name) {
@@ -287,7 +278,7 @@ public final class Schema {
 
     /** The element schema of an array, or {@code null} if there is none. Reads only. */
     public Schema getItems() {
-        return node.get(ITEMS) instanceof ObjectNode items ? new Schema(items) : null;
+        return JsonNodes.wrap(node.get(ITEMS), Schema::new);
     }
 
     /** The element schema of an array, adding an empty one if there is none. */
@@ -311,7 +302,7 @@ public final class Schema {
 
     /** The schema form of {@code additionalProperties}, or {@code null}. Reads only. */
     public Schema getAdditionalPropertiesSchema() {
-        return node.get(ADDITIONAL_PROPERTIES) instanceof ObjectNode schema ? new Schema(schema) : null;
+        return JsonNodes.wrap(node.get(ADDITIONAL_PROPERTIES), Schema::new);
     }
 
     /** The schema form, replacing a boolean form with an empty schema if need be. */

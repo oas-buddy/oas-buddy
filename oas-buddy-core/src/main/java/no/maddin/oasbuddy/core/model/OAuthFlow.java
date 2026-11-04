@@ -3,8 +3,6 @@ package no.maddin.oasbuddy.core.model;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /** One flow of an oauth2 scheme: its URLs and its scope map. */
@@ -28,14 +26,7 @@ public final class OAuthFlow {
 
     /** The declared scopes, in document order. */
     public List<String> scopeNames() {
-        List<String> names = new ArrayList<>();
-        if (node.get(SCOPES_FIELD) instanceof ObjectNode scopes) {
-            Iterator<String> it = scopes.fieldNames();
-            while (it.hasNext()) {
-                names.add(it.next());
-            }
-        }
-        return names;
+        return JsonNodes.fieldNames(node.get(SCOPES_FIELD));
     }
 
     public String getScopeDescription(String scope) {

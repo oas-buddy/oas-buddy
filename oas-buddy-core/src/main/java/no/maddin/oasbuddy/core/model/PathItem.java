@@ -53,7 +53,7 @@ public final class PathItem {
 
     public Operation getOperation(HttpMethod method) {
         var existing = node.get(method.fieldName());
-        return existing instanceof ObjectNode objectNode ? new Operation(objectNode) : null;
+        return JsonNodes.wrap(existing, Operation::new);
     }
 
     public Operation addOperation(HttpMethod method) {

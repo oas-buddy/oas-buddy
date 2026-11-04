@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -25,14 +23,7 @@ public final class ResponseLinks {
 
     /** Every key, including one whose value is not an object, so the file is never hidden from the user. */
     public List<String> names() {
-        List<String> names = new ArrayList<>();
-        if (parent.get(FIELD) instanceof ObjectNode links) {
-            Iterator<String> it = links.fieldNames();
-            while (it.hasNext()) {
-                names.add(it.next());
-            }
-        }
-        return names;
+        return JsonNodes.fieldNames(parent.get(FIELD));
     }
 
     /** The named link, or {@code null} if it is absent or not an object. */

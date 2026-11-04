@@ -91,7 +91,7 @@ public final class Link {
 
     /** The server override, or {@code null} if there is none (or it is not an object). Reads only. */
     public Server getServer() {
-        return node.get(SERVER) instanceof ObjectNode server ? new Server(server) : null;
+        return JsonNodes.wrap(node.get(SERVER), Server::new);
     }
 
     public Server createServer() {

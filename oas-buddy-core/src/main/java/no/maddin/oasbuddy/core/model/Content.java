@@ -3,8 +3,6 @@ package no.maddin.oasbuddy.core.model;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -29,14 +27,7 @@ public final class Content {
     }
 
     public List<String> mediaTypes() {
-        List<String> names = new ArrayList<>();
-        if (parent.get(FIELD) instanceof ObjectNode content) {
-            Iterator<String> it = content.fieldNames();
-            while (it.hasNext()) {
-                names.add(it.next());
-            }
-        }
-        return names;
+        return JsonNodes.fieldNames(parent.get(FIELD));
     }
 
     /** The media type if present, otherwise {@code null}. Reads only. */

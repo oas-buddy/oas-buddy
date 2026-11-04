@@ -3,8 +3,6 @@ package no.maddin.oasbuddy.core.model;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -48,15 +46,8 @@ public final class Callback {
 
     /** Every expression key, including one whose value is not an object, so the file is never hidden. */
     public List<String> expressions() {
-        List<String> names = new ArrayList<>();
-        Iterator<String> it = node.fieldNames();
-        while (it.hasNext()) {
-            String name = it.next();
-            if (!isExpression(name)) {
-                continue;
-            }
-            names.add(name);
-        }
+        List<String> names = JsonNodes.fieldNames(node);
+        names.removeIf(name -> !isExpression(name));
         return names;
     }
 

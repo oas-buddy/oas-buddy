@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 import no.maddin.oasbuddy.core.document.LazyObjectNode;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /** The named map at {@code components.headers}: headers defined once and referenced from responses. */
@@ -21,16 +19,7 @@ public final class ComponentHeaders {
     }
 
     public List<String> names() {
-        ObjectNode existing = node.peek();
-        if (existing == null) {
-            return List.of();
-        }
-        List<String> names = new ArrayList<>();
-        Iterator<String> it = existing.fieldNames();
-        while (it.hasNext()) {
-            names.add(it.next());
-        }
-        return names;
+        return JsonNodes.fieldNames(node.peek());
     }
 
     /** The named header, or {@code null} if it is absent or not an object. */

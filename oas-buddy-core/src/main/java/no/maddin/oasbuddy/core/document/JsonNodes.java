@@ -6,9 +6,9 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 public final class JsonNodes {
 
@@ -33,6 +33,29 @@ public final class JsonNodes {
         ArrayNode created = JsonNodeFactory.instance.arrayNode();
         parent.set(field, created);
         return created;
+    }
+
+    /** The node itself when it is an object, otherwise {@code null} (absent, null, array, scalar). */
+    public static ObjectNode objectOrNull(JsonNode node) {
+        return node instanceof ObjectNode objectNode ? objectNode : null;
+    }
+
+    /** {@code factory} applied to the node when it is an object, otherwise {@code null}. */
+    public static <T> T wrap(JsonNode node, Function<ObjectNode, T> factory) {
+        return node instanceof ObjectNode objectNode ? factory.apply(objectNode) : null;
+    }
+
+    /**
+     * The field names of an object in document order; empty for anything that is not an object, so
+     * a caller can pass {@code parent.get(FIELD)} without checking it first. A snapshot, not a view:
+     * fields may be removed while the result is being walked.
+     */
+    public static List<String> fieldNames(JsonNode node) {
+        List<String> names = new ArrayList<>();
+        if (node instanceof ObjectNode objectNode) {
+            objectNode.fieldNames().forEachRemaining(names::add);
+        }
+        return names;
     }
 
     public static String text(ObjectNode node, String field) {
@@ -77,9 +100,7 @@ public final class JsonNodes {
             return false;
         }
         List<Map.Entry<String, JsonNode>> entries = new ArrayList<>();
-        Iterator<String> fieldNames = parent.fieldNames();
-        while (fieldNames.hasNext()) {
-            String name = fieldNames.next();
+        for (String name : fieldNames(parent)) {
             entries.add(Map.entry(name.equals(from) ? to : name, parent.get(name)));
         }
         parent.removeAll();
