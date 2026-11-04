@@ -7,14 +7,22 @@ on:
 
 # Only ever reads the repository: checkout, then a Maven build. Declared explicitly rather than
 # relying on the repository default, which is a setting that can change out from under the workflow.
+# pull-requests: read lets the Sonar scanner read the pull request it is analysing.
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   build:
     runs-on: ubuntu-24.04
+    env:
+      # A fork's pull request gets no secrets, so this is empty there and Sonar is skipped.
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Sonar needs the full history to attribute new code; a shallow clone makes it warn.
+          fetch-depth: 0
 
       - uses: actions/setup-java@v6
         with:
@@ -25,5 +33,11 @@ jobs:
       - name: Install Xvfb (for JavaFX/TestFX tests)
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
+      # verify rather than test: it also writes the JaCoCo coverage report Sonar reads.
       - name: Build and test
-        run: xvfb-run -a mvn -B test
+        if: env.SONAR_TOKEN == ''
+        run: xvfb-run -a mvn -B verify
+
+      - name: Build, test and analyse with SonarCloud
+        if: env.SONAR_TOKEN != ''
+        run: xvfb-run -a mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar

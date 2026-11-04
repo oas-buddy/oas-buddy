@@ -105,8 +105,9 @@
           <!-- JavaFX loads its native libraries via System::load, a restricted method: from
                Java 24 that prints a four-line warning, and a future release will block it
                outright unless native access is granted. Surefire puts JavaFX on the classpath,
-               so the grant has to name ALL-UNNAMED rather than the module. -->
-          <argLine>--enable-native-access=ALL-UNNAMED</argLine>
+               so the grant has to name ALL-UNNAMED rather than the module. The leading late-bound
+               argLine property carries the JaCoCo agent (see the root POM). -->
+          <argLine>@{argLine} --enable-native-access=ALL-UNNAMED</argLine>
           <systemPropertyVariables>
             <!-- So AppInfoTest can check that version.properties really was filtered, instead of
                  only checking that it holds something. -->
