@@ -40,7 +40,7 @@ An OpenAPI Specification (OAS) editor.
 - License: Apache 2.0
 
 ### CI
-- GitHub Actions (`.github/workflows/ci.yml`): builds and runs the full test suite (Java 25, `mvn test`) on push to `master` and on pull requests. The desktop module's TestFX tests need a display, so the job runs under Xvfb (`xvfb-run -a mvn -B test`).
+- GitHub Actions (`.github/workflows/ci.yml`): builds and runs the full test suite (Java 25, `mvn verify`) on push to `master` and on pull requests. The desktop module's TestFX tests need a display, so the job runs under Xvfb (`xvfb-run -a mvn -B verify`).
 - **SonarCloud analysis runs from `ci.yml`**, project `oas-buddy_oas-buddy` in organization `oas-buddy` (settings are properties in the root POM). The job does `mvn verify` plus `sonar-maven-plugin:sonar` when the `SONAR_TOKEN` secret is present, and plain `mvn verify` when it is not (a fork's pull request gets no secrets). It checks out with `fetch-depth: 0`, which Sonar needs to attribute new code. `jacoco-maven-plugin` writes `target/site/jacoco/jacoco.xml` in each module's `verify` phase; that is what makes the quality gate's coverage condition real rather than vacuously passing.
   - **SonarCloud's own Automatic Analysis must stay switched off** on the project: it is mutually exclusive with scanner-based analysis, and the scanner step fails if both are on.
   - **The desktop module's surefire `argLine` starts with `@{argLine}`**: that is the late-bound property the JaCoCo agent fills in, and without it the agent would be silently dropped for the desktop tests. The root POM declares an empty default so the reference still resolves when the agent has not set it.
