@@ -1,6 +1,7 @@
 package no.maddin.oasbuddy.core.validation;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
 import no.maddin.oasbuddy.core.document.OasDocument;
@@ -16,6 +17,10 @@ public final class OasValidator {
     /** Reads YAML and, YAML being a superset of it, JSON. */
     private static final ObjectMapper YAML = new ObjectMapper(new YAMLFactory());
 
+    /** What the editor checks beyond swagger-parser, in the order its messages are listed. */
+    private static final List<Check> CHECKS = List.of(
+            ConstraintCheck::check, TagCheck::check, ReferenceCheck::check, LinkCheck::check);
+
     public ValidationResult validate(OasDocument document) {
         return validate(document.getRoot().toString());
     }
@@ -26,46 +31,19 @@ public final class OasValidator {
         SwaggerParseResult result = new OpenAPIV3Parser().readContents(content, null, options);
         List<ValidationMessage> messages = new ArrayList<>();
         result.getMessages().forEach(message -> messages.add(new ValidationMessage(ValidationSeverity.ERROR, message)));
-        messages.addAll(checkConstraints(content));
-        messages.addAll(checkTags(content));
-        messages.addAll(checkReferences(content));
-        messages.addAll(checkLinks(content));
+        JsonNode tree = parse(content);
+        if (tree != null) {
+            CHECKS.forEach(check -> messages.addAll(check.check(tree)));
+        }
         return new ValidationResult(messages);
     }
 
-    /** Content swagger-parser could not read has already been reported by it; nothing to add. */
-    private static List<ValidationMessage> checkConstraints(String content) {
+    /** {@code null} for content swagger-parser could not read either: it has already reported that. */
+    private static JsonNode parse(String content) {
         try {
-            return ConstraintCheck.check(YAML.readTree(content));
+            return YAML.readTree(content);
         } catch (JsonProcessingException e) {
-            return List.of();
-        }
-    }
-
-    /** Content swagger-parser could not read has already been reported by it; nothing to add. */
-    private static List<ValidationMessage> checkReferences(String content) {
-        try {
-            return ReferenceCheck.check(YAML.readTree(content));
-        } catch (JsonProcessingException e) {
-            return List.of();
-        }
-    }
-
-    /** Content swagger-parser could not read has already been reported by it; nothing to add. */
-    private static List<ValidationMessage> checkTags(String content) {
-        try {
-            return TagCheck.check(YAML.readTree(content));
-        } catch (JsonProcessingException e) {
-            return List.of();
-        }
-    }
-
-    /** Content swagger-parser could not read has already been reported by it; nothing to add. */
-    private static List<ValidationMessage> checkLinks(String content) {
-        try {
-            return LinkCheck.check(YAML.readTree(content));
-        } catch (JsonProcessingException e) {
-            return List.of();
+            return null;
         }
     }
 }
