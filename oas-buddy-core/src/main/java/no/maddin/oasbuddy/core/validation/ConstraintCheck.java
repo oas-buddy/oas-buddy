@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Checks schema validation keywords, which swagger-parser leaves almost entirely alone: it accepts
@@ -28,7 +30,8 @@ final class ConstraintCheck {
     /** Keys whose value is a list of schemas. */
     private static final Set<String> SCHEMA_LISTS = Set.of("allOf", "anyOf", "oneOf");
     /** Keys holding example data, which may contain anything and is never a schema. */
-    private static final Set<String> DATA = Set.of("example", "examples", "default", "enum");
+    private static final Set<String> DATA = Stream.concat(Check.DATA_FIELDS.stream(), Stream.of("examples"))
+            .collect(Collectors.toUnmodifiableSet());
 
     private ConstraintCheck() {
     }

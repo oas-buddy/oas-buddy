@@ -32,7 +32,6 @@ final class ReferenceCheck {
     private static final String REF = "$ref";
     private static final String LOCATION_SEPARATOR = " → ";
     private static final String SCHEMA_REF_PREFIX = "#/components/schemas/";
-    private static final List<String> DATA_FIELDS = List.of("example", "default", "enum");
 
     private ReferenceCheck() {
     }
@@ -70,7 +69,7 @@ final class ReferenceCheck {
 
     /** An Example object's {@code value} sits two levels below an {@code examples} map. */
     private static boolean isData(String field, List<String> location) {
-        return DATA_FIELDS.contains(field)
+        return Check.DATA_FIELDS.contains(field)
                 || "value".equals(field) && location.size() >= 2
                         && "examples".equals(location.get(location.size() - 2));
     }
