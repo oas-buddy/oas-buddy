@@ -1,42 +1,26 @@
 package no.maddin.oasbuddy.core.model;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import no.maddin.oasbuddy.core.document.JsonNodes;
 import no.maddin.oasbuddy.core.document.LazyObjectNode;
 
-import java.util.List;
-
-/** The named map at {@code components.examples}: examples defined once and referenced from media types. */
-public final class ComponentExamples {
+/** The named map at {@code components.examples}: examples defined once and referenced from media types and parameters. */
+public final class ComponentExamples extends ComponentSection<Example> {
 
     /** The {@code components} field these live in, as {@link ComponentReferences} names it. */
     public static final String SECTION = "examples";
 
-    private final LazyObjectNode node;
-
     public ComponentExamples(LazyObjectNode node) {
-        this.node = node;
-    }
-
-    public List<String> names() {
-        return JsonNodes.fieldNames(node.peek());
+        super(node, Example::new);
     }
 
     public Example getExample(String name) {
-        ObjectNode existing = node.peek();
-        return existing != null && existing.get(name) instanceof ObjectNode exampleNode
-                ? new Example(exampleNode)
-                : null;
+        return get(name);
     }
 
     public Example addExample(String name) {
-        return new Example(JsonNodes.objectChild(node.create(), name));
+        return add(name);
     }
 
     public void removeExample(String name) {
-        ObjectNode existing = node.peek();
-        if (existing != null) {
-            existing.remove(name);
-        }
+        remove(name);
     }
 }
