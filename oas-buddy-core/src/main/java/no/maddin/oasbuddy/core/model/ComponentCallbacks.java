@@ -1,42 +1,26 @@
 package no.maddin.oasbuddy.core.model;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import no.maddin.oasbuddy.core.document.JsonNodes;
 import no.maddin.oasbuddy.core.document.LazyObjectNode;
 
-import java.util.List;
-
 /** The named map at {@code components.callbacks}: callbacks defined once and referenced from operations. */
-public final class ComponentCallbacks {
+public final class ComponentCallbacks extends ComponentSection<Callback> {
 
     /** The {@code components} field these live in, as {@link ComponentReferences} names it. */
     public static final String SECTION = "callbacks";
 
-    private final LazyObjectNode node;
-
     public ComponentCallbacks(LazyObjectNode node) {
-        this.node = node;
-    }
-
-    public List<String> names() {
-        return JsonNodes.fieldNames(node.peek());
+        super(node, Callback::new);
     }
 
     public Callback getCallback(String name) {
-        ObjectNode existing = node.peek();
-        return existing != null && existing.get(name) instanceof ObjectNode callbackNode
-                ? new Callback(callbackNode)
-                : null;
+        return get(name);
     }
 
     public Callback addCallback(String name) {
-        return new Callback(JsonNodes.objectChild(node.create(), name));
+        return add(name);
     }
 
     public void removeCallback(String name) {
-        ObjectNode existing = node.peek();
-        if (existing != null) {
-            existing.remove(name);
-        }
+        remove(name);
     }
 }

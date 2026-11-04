@@ -1,39 +1,24 @@
 package no.maddin.oasbuddy.core.model;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 import no.maddin.oasbuddy.core.document.LazyObjectNode;
 
-import java.util.List;
-
-public final class Schemas {
-
-    private final LazyObjectNode node;
+public final class Schemas extends ComponentSection<Schema> {
 
     public Schemas(LazyObjectNode node) {
-        this.node = node;
-    }
-
-    public List<String> names() {
-        return JsonNodes.fieldNames(node.peek());
+        super(node, Schema::new);
     }
 
     public Schema getSchema(String name) {
-        ObjectNode existing = node.peek();
-        return existing != null && existing.get(name) instanceof ObjectNode schemaNode
-                ? new Schema(schemaNode)
-                : null;
+        return get(name);
     }
 
     public Schema addSchema(String name) {
-        return new Schema(JsonNodes.objectChild(node.create(), name));
+        return add(name);
     }
 
     public void removeSchema(String name) {
-        ObjectNode existing = node.peek();
-        if (existing != null) {
-            existing.remove(name);
-        }
+        remove(name);
     }
 
     /**
@@ -44,7 +29,6 @@ public final class Schemas {
      *         already taken (a collision is refused, never silently overwritten)
      */
     public boolean renameSchema(String from, String to) {
-        ObjectNode existing = node.peek();
-        return existing != null && JsonNodes.renameField(existing, from, to);
+        return peek() != null && JsonNodes.renameField(peek(), from, to);
     }
 }

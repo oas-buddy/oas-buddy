@@ -1,42 +1,26 @@
 package no.maddin.oasbuddy.core.model;
 
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import no.maddin.oasbuddy.core.document.JsonNodes;
 import no.maddin.oasbuddy.core.document.LazyObjectNode;
 
-import java.util.List;
-
 /** The named map at {@code components.links}: links defined once and referenced from responses. */
-public final class ComponentLinks {
+public final class ComponentLinks extends ComponentSection<Link> {
 
     /** The {@code components} field these live in, as {@link ComponentReferences} names it. */
     public static final String SECTION = "links";
 
-    private final LazyObjectNode node;
-
     public ComponentLinks(LazyObjectNode node) {
-        this.node = node;
-    }
-
-    public List<String> names() {
-        return JsonNodes.fieldNames(node.peek());
+        super(node, Link::new);
     }
 
     public Link getLink(String name) {
-        ObjectNode existing = node.peek();
-        return existing != null && existing.get(name) instanceof ObjectNode linkNode
-                ? new Link(linkNode)
-                : null;
+        return get(name);
     }
 
     public Link addLink(String name) {
-        return new Link(JsonNodes.objectChild(node.create(), name));
+        return add(name);
     }
 
     public void removeLink(String name) {
-        ObjectNode existing = node.peek();
-        if (existing != null) {
-            existing.remove(name);
-        }
+        remove(name);
     }
 }
