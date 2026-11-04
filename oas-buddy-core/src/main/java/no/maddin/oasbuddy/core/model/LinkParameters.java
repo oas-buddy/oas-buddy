@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -23,14 +21,7 @@ public final class LinkParameters {
     }
 
     public List<String> names() {
-        List<String> names = new ArrayList<>();
-        if (parent.get(FIELD) instanceof ObjectNode parameters) {
-            Iterator<String> it = parameters.fieldNames();
-            while (it.hasNext()) {
-                names.add(it.next());
-            }
-        }
-        return names;
+        return JsonNodes.fieldNames(parent.get(FIELD));
     }
 
     /** The value, or {@code null} if there is no such parameter. */

@@ -3,8 +3,6 @@ package no.maddin.oasbuddy.core.model;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public final class Paths {
@@ -16,17 +14,12 @@ public final class Paths {
     }
 
     public List<String> pathNames() {
-        List<String> names = new ArrayList<>();
-        Iterator<String> it = node.fieldNames();
-        while (it.hasNext()) {
-            names.add(it.next());
-        }
-        return names;
+        return JsonNodes.fieldNames(node);
     }
 
     public PathItem getPathItem(String path) {
         var existing = node.get(path);
-        return existing instanceof ObjectNode objectNode ? new PathItem(objectNode) : null;
+        return JsonNodes.wrap(existing, PathItem::new);
     }
 
     public PathItem addPath(String path) {

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -27,12 +26,7 @@ public final class SecurityRequirement {
 
     /** The schemes this requirement names, in document order. */
     public List<String> schemeNames() {
-        List<String> names = new ArrayList<>();
-        Iterator<String> it = node.fieldNames();
-        while (it.hasNext()) {
-            names.add(it.next());
-        }
-        return names;
+        return JsonNodes.fieldNames(node);
     }
 
     /** Whether this requirement names several schemes, i.e. demands all of them at once. */

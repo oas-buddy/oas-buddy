@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public final class Responses {
@@ -17,17 +15,12 @@ public final class Responses {
     }
 
     public List<String> statusCodes() {
-        List<String> codes = new ArrayList<>();
-        Iterator<String> it = node.fieldNames();
-        while (it.hasNext()) {
-            codes.add(it.next());
-        }
-        return codes;
+        return JsonNodes.fieldNames(node);
     }
 
     public ApiResponse getResponse(String statusCode) {
         var existing = node.get(statusCode);
-        return existing instanceof ObjectNode objectNode ? new ApiResponse(objectNode) : null;
+        return JsonNodes.wrap(existing, ApiResponse::new);
     }
 
     public ApiResponse addResponse(String statusCode) {

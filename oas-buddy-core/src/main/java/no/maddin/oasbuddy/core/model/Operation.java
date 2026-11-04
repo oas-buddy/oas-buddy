@@ -101,7 +101,7 @@ public final class Operation {
 
     public RequestBody getRequestBody() {
         var existing = node.get("requestBody");
-        return existing instanceof ObjectNode objectNode ? new RequestBody(objectNode) : null;
+        return JsonNodes.wrap(existing, RequestBody::new);
     }
 
     public RequestBody addRequestBody() {

@@ -164,6 +164,6 @@ public final class Parameter {
 
     /** The schema if there is one, otherwise {@code null}. Reads only. */
     public Schema findSchema() {
-        return node.get("schema") instanceof ObjectNode schemaNode ? new Schema(schemaNode) : null;
+        return JsonNodes.wrap(node.get("schema"), Schema::new);
     }
 }

@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
 import no.maddin.oasbuddy.core.document.LazyObjectNode;
 
-import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -25,16 +23,7 @@ public final class ComponentParameters {
     }
 
     public List<String> names() {
-        ObjectNode existing = node.peek();
-        if (existing == null) {
-            return List.of();
-        }
-        List<String> names = new ArrayList<>();
-        Iterator<String> it = existing.fieldNames();
-        while (it.hasNext()) {
-            names.add(it.next());
-        }
-        return names;
+        return JsonNodes.fieldNames(node.peek());
     }
 
     public Parameter getParameter(String key) {

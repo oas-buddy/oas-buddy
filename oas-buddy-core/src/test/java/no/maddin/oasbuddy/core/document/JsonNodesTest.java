@@ -9,6 +9,7 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -67,6 +68,49 @@ class JsonNodesTest {
         assertFalse(JsonNodes.renameField(node, "a", " "));
         assertFalse(JsonNodes.renameField(node, "", "z"));
         assertEquals(List.of("a"), fieldNames(node));
+    }
+
+    @Test
+    void listsFieldNamesInDocumentOrder() {
+        assertEquals(List.of("c", "a", "b"), JsonNodes.fieldNames(objectOf("c", "a", "b")));
+    }
+
+    @Test
+    void fieldNamesOfAnythingThatIsNotAnObjectIsEmpty() {
+        assertEquals(List.of(), JsonNodes.fieldNames(null));
+        assertEquals(List.of(), JsonNodes.fieldNames(JsonNodeFactory.instance.arrayNode()));
+        assertEquals(List.of(), JsonNodes.fieldNames(JsonNodeFactory.instance.textNode("x")));
+        assertEquals(List.of(), JsonNodes.fieldNames(JsonNodeFactory.instance.nullNode()));
+    }
+
+    @Test
+    void fieldNamesIsASnapshotSoFieldsCanBeRemovedWhileWalkingIt() {
+        ObjectNode node = objectOf("a", "b", "c");
+
+        for (String name : JsonNodes.fieldNames(node)) {
+            node.remove(name);
+        }
+
+        assertTrue(node.isEmpty());
+    }
+
+    @Test
+    void objectOrNullReturnsOnlyObjects() {
+        ObjectNode node = objectOf("a");
+
+        assertSame(node, JsonNodes.objectOrNull(node));
+        assertNull(JsonNodes.objectOrNull(null));
+        assertNull(JsonNodes.objectOrNull(JsonNodeFactory.instance.arrayNode()));
+        assertNull(JsonNodes.objectOrNull(JsonNodeFactory.instance.nullNode()));
+    }
+
+    @Test
+    void wrapAppliesTheConstructorToAnObjectAndYieldsNullOtherwise() {
+        ObjectNode node = objectOf("a");
+
+        assertSame(node, JsonNodes.wrap(node, n -> n));
+        assertNull(JsonNodes.wrap(null, n -> n));
+        assertNull(JsonNodes.wrap(JsonNodeFactory.instance.textNode("x"), n -> n));
     }
 
     private static void assertFieldOrder(ObjectNode node, String... expectedOrder) {
