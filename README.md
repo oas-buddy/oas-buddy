@@ -10,13 +10,13 @@ See [CLAUDE.md](CLAUDE.md) for the full project vision, MVP scope, and architect
 
 ## Project Metrics
 
-[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=maddingo_oas-buddy&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=maddingo_oas-buddy)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=oas-buddy_oas-buddy&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=oas-buddy_oas-buddy)
 
-[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=maddingo_oas-buddy&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=maddingo_oas-buddy)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=oas-buddy_oas-buddy&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=oas-buddy_oas-buddy)
 
-[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=maddingo_oas-buddy&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=maddingo_oas-buddy)
+[![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=oas-buddy_oas-buddy&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=oas-buddy_oas-buddy)
 
-[![Security issues](https://sonarcloud.io/api/project_badges/measure?project=maddingo_oas-buddy&metric=software_quality_security_issues)](https://sonarcloud.io/summary/new_code?id=maddingo_oas-buddy)
+[![Security issues](https://sonarcloud.io/api/project_badges/measure?project=oas-buddy_oas-buddy&metric=software_quality_security_issues)](https://sonarcloud.io/summary/new_code?id=oas-buddy_oas-buddy)
 
 ## Branding
 

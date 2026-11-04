@@ -64,6 +64,19 @@
     <slf4j.version>2.0.9</slf4j.version>
     <javafx.version>25.0.4</javafx.version>
     <testfx.version>4.0.18</testfx.version>
+
+    <jacoco.version>0.8.16</jacoco.version>
+    <sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
+
+    <!-- Empty default so the late-bound @{argLine} in a module's surefire config still resolves
+         when the JaCoCo agent has not set it (JaCoCo replaces it with its -javaagent option). -->
+    <argLine></argLine>
+
+    <!-- SonarCloud. Analysis runs from CI (ci.yml), not from SonarCloud's automatic analysis; the
+         two are mutually exclusive, so that must stay switched off on the project. -->
+    <sonar.host.url>https://sonarcloud.io</sonar.host.url>
+    <sonar.organization>oas-buddy</sonar.organization>
+    <sonar.projectKey>oas-buddy_oas-buddy</sonar.projectKey>
   </properties>
 
   <dependencyManagement>
@@ -117,9 +130,37 @@
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.5.2</version>
         </plugin>
+        <plugin>
+          <groupId>org.sonarsource.scanner.maven</groupId>
+          <artifactId>sonar-maven-plugin</artifactId>
+          <version>${sonar-maven-plugin.version}</version>
+        </plugin>
       </plugins>
     </pluginManagement>
     <plugins>
+      <!-- Coverage for SonarCloud: the agent instruments the surefire run, and the report (written
+           in the verify phase to target/site/jacoco/jacoco.xml, where the Sonar scanner looks by
+           default) is what turns the quality gate's coverage condition from vacuous into real. -->
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>verify</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
       <!-- Without this, a standalone `mvn install` writes the literal, unresolved "${revision}"
            text into the installed POM (it only resolves within a live reactor build), which then
            breaks any later separate build - e.g. `cd oas-buddy-desktop && mvn javafx:run` - that
