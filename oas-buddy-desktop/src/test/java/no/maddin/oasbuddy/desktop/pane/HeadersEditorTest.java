@@ -72,10 +72,10 @@ class HeadersEditorTest extends ApplicationTest {
 
     @Test
     void aResponseCanDeclareAHeaderWithADescriptionASchemaAndRequired() {
-        interact(() -> ((TextField) byClass(HeadersEditor.NEW_NAME_CLASS)).setText("X-Total"));
+        interact(() -> ((TextField) byClass("new-header-name")).setText("X-Total"));
         interact(() -> button("Add header").fire());
 
-        var row = lookup("." + HeadersEditor.ROW_CLASS).query();
+        var row = lookup("." + "header-row").query();
         interact(() -> {
             var fields = row.lookupAll(".text-field").stream().map(TextField.class::cast).toList();
             fields.get(1).setText("Total items");   // description
@@ -92,14 +92,14 @@ class HeadersEditorTest extends ApplicationTest {
     @Test
     void aResponseCanReferToAReusableHeaderAndSwitchingToInlineCopiesIt() {
         @SuppressWarnings("unchecked")
-        ComboBox<String> components = (ComboBox<String>) byClass(HeadersEditor.REFERENCE_CLASS);
+        ComboBox<String> components = (ComboBox<String>) byClass("reference-header");
         interact(() -> components.setValue("Rate"));
         interact(() -> button("Add reference").fire());
 
         assertEquals("Rate", ok.getHeaders().get("Rate").getReferencedHeaderName());
 
         @SuppressWarnings("unchecked")
-        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass(HeadersEditor.SOURCE_CLASS);
+        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass("header-source");
         interact(() -> picker.setValue(SourceChoice.INLINE));
 
         assertFalse(ok.getHeaders().get("Rate").isReference());
@@ -114,7 +114,7 @@ class HeadersEditorTest extends ApplicationTest {
         confirmAnswer.set(false);
 
         @SuppressWarnings("unchecked")
-        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass(HeadersEditor.SOURCE_CLASS);
+        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass("header-source");
         interact(() -> picker.setValue(new SourceChoice("Rate")));
 
         assertTrue(asked.get());
@@ -129,7 +129,7 @@ class HeadersEditorTest extends ApplicationTest {
         ok.getHeaders().add("C");
         showOperation();
 
-        TextField second = lookup("." + HeadersEditor.NAME_CLASS).queryAllAs(TextField.class).stream()
+        TextField second = lookup("." + "header-name").queryAllAs(TextField.class).stream()
                 .filter(f -> "B".equals(f.getText())).findFirst().orElseThrow();
         interact(() -> {
             second.setText("Z");
@@ -148,7 +148,7 @@ class HeadersEditorTest extends ApplicationTest {
         assertTrue(lookup((Node n) -> n instanceof Label l && "(not an object)".equals(l.getText()))
                 .tryQuery().isPresent());
 
-        Node row = lookup("." + HeadersEditor.ROW_CLASS).query();
+        Node row = lookup("." + "header-row").query();
         interact(() -> ((Button) row.lookup(".button")).fire());
         assertFalse(document.getRoot().get("paths").get("/pets").get("get").get("responses").get("200")
                 .has("headers"));
@@ -159,7 +159,7 @@ class HeadersEditorTest extends ApplicationTest {
         document.getComponents().getResponses().addResponse("Limited").setDescription("limited");
         show(ResponsePane.build(document, "Limited", List::of, (q, d) -> true, name -> { }));
 
-        interact(() -> ((TextField) byClass(HeadersEditor.NEW_NAME_CLASS)).setText("Retry-After"));
+        interact(() -> ((TextField) byClass("new-header-name")).setText("Retry-After"));
         interact(() -> button("Add header").fire());
 
         assertEquals(List.of("Retry-After"),

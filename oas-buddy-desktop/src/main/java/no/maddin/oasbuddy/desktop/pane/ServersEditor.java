@@ -221,11 +221,7 @@ final class ServersEditor {
         };
         showEditor.run();
 
-        boolean[] reverting = {false};
-        overrideBox.selectedProperty().addListener((obs, was, now) -> {
-            if (reverting[0]) {
-                return;
-            }
+        FormFields.guarded(overrideBox.selectedProperty(), (was, now) -> {
             if (now) {
                 servers.declare();
             } else {
@@ -233,14 +229,12 @@ final class ServersEditor {
                 if (count > 0 && !confirmation.confirm(
                         "Stop overriding the document's servers?",
                         "The " + count + " server" + (count == 1 ? "" : "s") + " declared here will be discarded.")) {
-                    reverting[0] = true;
-                    overrideBox.setSelected(true);
-                    reverting[0] = false;
-                    return;
+                    return false;
                 }
                 servers.undeclare();
             }
             showEditor.run();
+            return true;
         });
         return new VBox(8, overrideBox, editorSlot);
     }

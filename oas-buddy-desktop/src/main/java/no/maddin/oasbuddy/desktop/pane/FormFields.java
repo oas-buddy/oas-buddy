@@ -1,6 +1,7 @@
 package no.maddin.oasbuddy.desktop.pane;
 
 import atlantafx.base.theme.Styles;
+import javafx.beans.property.Property;
 import javafx.geometry.HPos;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -18,6 +19,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -25,6 +27,25 @@ import java.util.function.Supplier;
 final class FormFields {
 
     private FormFields() {
+    }
+
+    /**
+     * Applies each change the user makes to {@code property}; when {@code apply} (given the old and
+     * the new value) returns {@code false} — a declined confirmation — the old value is put back
+     * without the change being applied again. Reverting would otherwise re-enter the listener.
+     */
+    static <T> void guarded(Property<T> property, BiPredicate<T, T> apply) {
+        boolean[] reverting = {false};
+        property.addListener((obs, was, now) -> {
+            if (reverting[0] || now == null || now.equals(was)) {
+                return;
+            }
+            if (!apply.test(was, now)) {
+                reverting[0] = true;
+                property.setValue(was);
+                reverting[0] = false;
+            }
+        });
     }
 
     /** A top-level pane body: consistent outer spacing/padding for every editor pane. */

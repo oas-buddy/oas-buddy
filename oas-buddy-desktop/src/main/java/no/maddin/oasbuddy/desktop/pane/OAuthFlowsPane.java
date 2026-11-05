@@ -70,27 +70,19 @@ public final class OAuthFlowsPane {
         enabled.setId("flow-" + flowName + "-enabled");
         enabled.getStyleClass().add(Styles.TEXT_BOLD);
         enabled.setSelected(present);
-        // Reverting a declined switch would otherwise re-enter this listener.
-        boolean[] reverting = {false};
-        enabled.selectedProperty().addListener((obs, was, now) -> {
-            if (reverting[0]) {
-                return;
-            }
+        FormFields.guarded(enabled.selectedProperty(), (was, now) -> {
             if (now) {
                 flows.addFlow(flowName);
-                onChanged.run();
-                return;
+            } else {
+                OAuthFlow existing = flows.getFlow(flowName);
+                if (existing != null && !existing.isEmpty()
+                        && !confirmation.confirm("Turn off the " + flowName + " flow?", describe(existing))) {
+                    return false;
+                }
+                flows.removeFlow(flowName);
             }
-            OAuthFlow existing = flows.getFlow(flowName);
-            if (existing != null && !existing.isEmpty()
-                    && !confirmation.confirm("Turn off the " + flowName + " flow?", describe(existing))) {
-                reverting[0] = true;
-                enabled.setSelected(true);
-                reverting[0] = false;
-                return;
-            }
-            flows.removeFlow(flowName);
             onChanged.run();
+            return true;
         });
 
         VBox block = new VBox(8, enabled);
