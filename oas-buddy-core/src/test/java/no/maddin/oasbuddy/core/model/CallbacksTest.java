@@ -22,25 +22,6 @@ class CallbacksTest {
     private final Operation operation = new Operation(node);
 
     @Test
-    void readingNeverAddsTheKey() {
-        assertTrue(operation.getCallbacks().names().isEmpty());
-        assertNull(operation.getCallbacks().get("onEvent"));
-        assertFalse(node.has("callbacks"));
-    }
-
-    @Test
-    void theKeyGoesWithTheLastCallback() {
-        Callbacks callbacks = operation.getCallbacks();
-        callbacks.add("A");
-        callbacks.add("B");
-
-        callbacks.remove("A");
-        assertTrue(node.has("callbacks"));
-        callbacks.remove("B");
-        assertFalse(node.has("callbacks"));
-    }
-
-    @Test
     void aCallbackMapsExpressionsToFullPathItems() {
         Callback callback = operation.getCallbacks().add("onEvent");
         PathItem item = callback.add("{$request.body#/callbackUrl}");

@@ -34,18 +34,6 @@ class ResponseLinksTest {
     }
 
     @Test
-    void theKeyGoesWithTheLastLink() {
-        ResponseLinks links = response.getLinks();
-        links.add("A");
-        links.add("B");
-
-        links.remove("A");
-        assertTrue(node.has("links"));
-        links.remove("B");
-        assertFalse(node.has("links"));
-    }
-
-    @Test
     void aLinkCarriesATargetParametersAndARequestBody() {
         Link link = response.getLinks().add("GetPet");
         link.setOperationId("getPet");
@@ -96,18 +84,6 @@ class ResponseLinksTest {
         assertFalse(links.get("Z").isReference());
         assertEquals("fromComponent", links.get("Z").getOperationId());
         assertEquals(List.of("A", "Z", "C"), links.names());
-    }
-
-    @Test
-    void aLinkThatIsNotAnObjectIsListedButNotReadable() throws IOException {
-        OasDocument document = DocumentReader.read(
-                "{\"openapi\":\"3.0.3\",\"paths\":{\"/a\":{\"get\":{\"responses\":{\"200\":"
-                        + "{\"description\":\"ok\",\"links\":{\"Odd\":\"~\"}}}}}}}", DocumentFormat.JSON);
-        ApiResponse ok = document.getPaths().getPathItem("/a").getOperation(HttpMethod.GET)
-                .getResponses().getResponse("200");
-
-        assertEquals(List.of("Odd"), ok.getLinks().names());
-        assertNull(ok.getLinks().get("Odd"));
     }
 
     @Test

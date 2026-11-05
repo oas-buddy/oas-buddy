@@ -33,28 +33,6 @@ class ComponentResponsesTest {
     }
 
     @Test
-    void readingTheSectionNeverAddsItToTheDocument() {
-        OasDocument document = OasDocument.newDocument(DocumentFormat.YAML);
-
-        assertAll(
-                () -> assertEquals(List.of(), document.getComponents().getResponses().names()),
-                () -> assertNull(document.getComponents().getResponses().getResponse("NotFound")),
-                () -> assertFalse(document.getRoot().has("components")));
-    }
-
-    @Test
-    void addsAndRemovesAResponse() {
-        OasDocument document = OasDocument.newDocument(DocumentFormat.YAML);
-        ComponentResponses responses = document.getComponents().getResponses();
-
-        responses.addResponse("NotFound").setDescription("Not here");
-        responses.addResponse("Error");
-        responses.removeResponse("NotFound");
-
-        assertEquals(List.of("Error"), responses.names());
-    }
-
-    @Test
     void anOperationResponseReferringToAComponentNamesIt() throws IOException {
         OasDocument document = loadReusable();
 

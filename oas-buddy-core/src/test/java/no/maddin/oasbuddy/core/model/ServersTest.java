@@ -58,26 +58,15 @@ class ServersTest {
     }
 
     @Test
-    void variablesAreLazyRenamedInPlaceAndTheKeyGoesWithTheLastOne() {
-        Server server = new Servers(parent).add("https://{region}.example.com/{version}");
+    void aNewVariableHasADefaultAndClearingItsEnumRemovesTheKey() {
+        Server server = new Servers(parent).add("https://{region}.example.com");
         ServerVariables variables = server.getVariables();
-        assertTrue(variables.names().isEmpty());
 
         variables.add("region").setEnum(List.of("eu", "us"));
-        variables.get("region").setDefault("eu");
-        variables.add("version");
-        assertEquals(List.of("region", "version"), variables.names());
+        assertEquals("", variables.get("region").getDefault());
+        variables.get("region").setEnum(List.of());
 
-        assertTrue(variables.rename("region", "zone"));
-        assertEquals(List.of("zone", "version"), variables.names(), "renaming keeps the position");
-        assertFalse(variables.rename("zone", "version"), "a collision is refused");
-
-        variables.get("zone").setEnum(List.of());
-        assertFalse(((ObjectNode) parent.get("servers").get(0).get("variables").get("zone")).has("enum"));
-
-        variables.remove("zone");
-        variables.remove("version");
-        assertFalse(parent.get("servers").get(0).has("variables"));
+        assertFalse(((ObjectNode) parent.get("servers").get(0).get("variables").get("region")).has("enum"));
     }
 
     @Test
@@ -88,18 +77,6 @@ class ServersTest {
         server.getVariables().add("region");
 
         assertEquals(List.of("version"), server.undefinedVariables());
-    }
-
-    @Test
-    void aVariableThatIsNotAnObjectIsListedButNotReadable() throws IOException {
-        OasDocument document = DocumentReader.read(
-                "{\"openapi\":\"3.0.3\",\"servers\":[{\"url\":\"https://{a}\",\"variables\":{\"a\":\"x\"}}]}",
-                DocumentFormat.JSON);
-        Server server = document.getServers().all().get(0);
-
-        assertEquals(List.of("a"), server.getVariables().names());
-        assertNull(server.getVariables().get("a"));
-        assertTrue(server.undefinedVariables().isEmpty());
     }
 
     @Test

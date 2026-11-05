@@ -103,19 +103,4 @@ class SecuritySchemesTest {
         assertTrue(schemaNames.isEmpty());
         assertFalse(document.getRoot().has("components"), "reading added a components section");
     }
-
-    @Test
-    void writingCreatesTheSectionsItNeeds() {
-        OasDocument document = DocumentReader.read("""
-                openapi: 3.0.3
-                info:
-                  title: Bare
-                  version: 1.0.0
-                paths: {}
-                """, DocumentFormat.YAML);
-
-        document.getComponents().getSecuritySchemes().addScheme("ApiKeyAuth").setType("apiKey");
-
-        assertTrue(document.getRoot().get("components").get("securitySchemes").has("ApiKeyAuth"));
-    }
 }

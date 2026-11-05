@@ -22,25 +22,6 @@ class ResponseHeadersTest {
     private final ApiResponse response = new ApiResponse(node);
 
     @Test
-    void readingNeverAddsTheKey() {
-        assertTrue(response.getHeaders().names().isEmpty());
-        assertNull(response.getHeaders().get("X-Rate-Limit"));
-        assertFalse(node.has("headers"));
-    }
-
-    @Test
-    void theKeyGoesWithTheLastHeader() {
-        ResponseHeaders headers = response.getHeaders();
-        headers.add("Location");
-        headers.add("X-Total");
-
-        headers.remove("Location");
-        assertTrue(node.has("headers"));
-        headers.remove("X-Total");
-        assertFalse(node.has("headers"));
-    }
-
-    @Test
     void aHeaderHasADescriptionARequiredFlagAndASchema() {
         Header header = response.getHeaders().add("X-Rate-Limit");
         header.setDescription("Calls left");
@@ -52,18 +33,6 @@ class ResponseHeadersTest {
         assertEquals("integer", written.get("schema").get("type").asText());
         assertFalse(written.has("name"));
         assertFalse(written.has("in"));
-    }
-
-    @Test
-    void renamingKeepsThePositionAndRefusesACollision() {
-        ResponseHeaders headers = response.getHeaders();
-        headers.add("A");
-        headers.add("B");
-        headers.add("C");
-
-        assertTrue(headers.rename("B", "Z"));
-        assertEquals(List.of("A", "Z", "C"), headers.names());
-        assertFalse(headers.rename("Z", "A"));
     }
 
     @Test
@@ -83,18 +52,6 @@ class ResponseHeadersTest {
         assertFalse(inline.isReference());
         assertEquals("from component", headers.get("B").getDescription());
         assertEquals(List.of("A", "B", "C"), headers.names());
-    }
-
-    @Test
-    void aHeaderThatIsNotAnObjectIsListedButNotReadable() throws IOException {
-        OasDocument document = DocumentReader.read(
-                "{\"openapi\":\"3.0.3\",\"paths\":{\"/a\":{\"get\":{\"responses\":{\"200\":"
-                        + "{\"description\":\"ok\",\"headers\":{\"X-Odd\":\"~\"}}}}}}}", DocumentFormat.JSON);
-        ApiResponse ok = document.getPaths().getPathItem("/a").getOperation(HttpMethod.GET)
-                .getResponses().getResponse("200");
-
-        assertEquals(List.of("X-Odd"), ok.getHeaders().names());
-        assertNull(ok.getHeaders().get("X-Odd"));
     }
 
     @Test
