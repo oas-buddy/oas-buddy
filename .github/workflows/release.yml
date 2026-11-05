@@ -15,13 +15,16 @@ permissions:
 jobs:
   tag:
     runs-on: ubuntu-24.04
+    env:
+      # Passed via the environment, never interpolated into run: blocks (script injection).
+      VERSION: ${{ inputs.version }}
     steps:
       - uses: actions/checkout@v7
 
       - name: Validate version format
         run: |
-          if ! [[ "${{ inputs.version }}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-            echo "::error::Version must be X.Y.Z (got '${{ inputs.version }}')"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must be X.Y.Z (got '$VERSION')"
             exit 1
           fi
 
@@ -29,8 +32,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git tag -a "v${{ inputs.version }}" -m "Release v${{ inputs.version }}"
-          git push origin "v${{ inputs.version }}"
+          git tag -a "v$VERSION" -m "Release v$VERSION"
+          git push origin "v$VERSION"
 
       - name: Trigger package workflow
         # A tag pushed using the default GITHUB_TOKEN does not fire other workflows' `push`
@@ -38,4 +41,4 @@ jobs:
         # --ref points it at the tag we just pushed, so it builds and releases that commit.
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh workflow run package.yml --ref "v${{ inputs.version }}"
+        run: gh workflow run package.yml --ref "v$VERSION"
