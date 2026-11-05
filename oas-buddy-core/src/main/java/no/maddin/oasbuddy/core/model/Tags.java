@@ -43,7 +43,6 @@ public final class Tags {
         return names;
     }
 
-    /** The named tag, or {@code null} if no tag with that name is declared. */
     /**
      * Every declared tag, in document order — the same entries {@link #names()} lists, as objects.
      * Iterate this rather than {@code names()} plus {@link #get}: with a duplicate name (a spec
@@ -62,6 +61,7 @@ public final class Tags {
         return all;
     }
 
+    /** The named tag, or {@code null} if no tag with that name is declared. */
     public Tag get(String name) {
         if (root.get(FIELD) instanceof ArrayNode array) {
             for (var element : array) {
