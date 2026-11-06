@@ -2,7 +2,6 @@ package no.maddin.oasbuddy.desktop.pane;
 
 import javafx.scene.Node;
 import no.maddin.oasbuddy.core.document.OasDocument;
-import no.maddin.oasbuddy.core.model.Callback;
 
 import java.util.List;
 import java.util.function.Consumer;
@@ -21,14 +20,9 @@ public final class CallbackPane {
      */
     public static Node build(OasDocument document, String callbackName, Supplier<List<String>> schemaNames,
                              RemovalConfirmation confirmation, Consumer<String> onRemoveCallback) {
-        Callback callback = document.getComponents().getCallbacks().getCallback(callbackName);
-        Node title = FormFields.headerWithDelete("Callback: " + callbackName, "delete-callback", "Delete callback",
-                () -> onRemoveCallback.accept(callbackName));
-        if (callback == null) {
-            return FormFields.root(title, FormFields.notEditable(callbackName, "a callback"));
-        }
-        return FormFields.root(title, CallbackExpressions.build(callback, ComponentCatalog.of(document), confirmation,
-                OperationPane.editor(schemaNames, TagCatalog.of(document), SecuritySchemeCatalog.of(document),
-                        ComponentCatalog.of(document), confirmation)));
+        return ComponentItemPane.build(ComponentKinds.CALLBACKS, document, callbackName, onRemoveCallback,
+                callback -> List.of(CallbackExpressions.build(callback, ComponentCatalog.of(document), confirmation,
+                        OperationPane.editor(schemaNames, TagCatalog.of(document), SecuritySchemeCatalog.of(document),
+                                ComponentCatalog.of(document), confirmation))));
     }
 }

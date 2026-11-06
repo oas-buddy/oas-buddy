@@ -20,24 +20,15 @@ import no.maddin.oasbuddy.desktop.pane.SchemaPane;
 import no.maddin.oasbuddy.desktop.pane.PathRename;
 import no.maddin.oasbuddy.desktop.pane.RemovalConfirmation;
 import no.maddin.oasbuddy.desktop.pane.CallbackPane;
-import no.maddin.oasbuddy.desktop.pane.CallbackRemoval;
-import no.maddin.oasbuddy.desktop.pane.CallbacksPane;
+import no.maddin.oasbuddy.desktop.pane.ComponentKinds;
+import no.maddin.oasbuddy.desktop.pane.ComponentListPane;
+import no.maddin.oasbuddy.desktop.pane.ComponentRemoval;
 import no.maddin.oasbuddy.desktop.pane.ComponentCatalog;
 import no.maddin.oasbuddy.desktop.pane.ExamplePane;
-import no.maddin.oasbuddy.desktop.pane.ExampleRemoval;
-import no.maddin.oasbuddy.desktop.pane.ExamplesPane;
 import no.maddin.oasbuddy.desktop.pane.HeaderPane;
-import no.maddin.oasbuddy.desktop.pane.HeaderRemoval;
-import no.maddin.oasbuddy.desktop.pane.HeadersPane;
 import no.maddin.oasbuddy.desktop.pane.LinkPane;
-import no.maddin.oasbuddy.desktop.pane.LinkRemoval;
-import no.maddin.oasbuddy.desktop.pane.LinksPane;
 import no.maddin.oasbuddy.desktop.pane.ParameterPane;
-import no.maddin.oasbuddy.desktop.pane.ParameterRemoval;
-import no.maddin.oasbuddy.desktop.pane.ParametersPane;
 import no.maddin.oasbuddy.desktop.pane.ResponsePane;
-import no.maddin.oasbuddy.desktop.pane.ResponseRemoval;
-import no.maddin.oasbuddy.desktop.pane.ResponsesPane;
 import no.maddin.oasbuddy.desktop.pane.SchemaRemoval;
 import no.maddin.oasbuddy.desktop.pane.SchemaRename;
 import no.maddin.oasbuddy.desktop.pane.SchemasPane;
@@ -354,7 +345,7 @@ public class MainApp extends Application {
         root.getChildren().add(schemasItem);
 
         TreeItem<OutlineNode> responsesItem = new TreeItem<>(new OutlineNode(
-                "Responses", () -> ResponsesPane.build(document, this::refreshOutline, this::removeResponse)));
+                "Responses", () -> ComponentListPane.build(ComponentKinds.RESPONSES, document, this::refreshOutline, this::removeResponse)));
         responsesItem.setExpanded(true);
         for (String name : document.getComponents().getResponses().names()) {
             responsesItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
@@ -365,7 +356,7 @@ public class MainApp extends Application {
         root.getChildren().add(responsesItem);
 
         TreeItem<OutlineNode> parametersItem = new TreeItem<>(new OutlineNode(
-                "Parameters", () -> ParametersPane.build(document, this::refreshOutline, this::removeParameter)));
+                "Parameters", () -> ComponentListPane.build(ComponentKinds.PARAMETERS, document, this::refreshOutline, this::removeParameter)));
         parametersItem.setExpanded(true);
         for (String key : document.getComponents().getParameters().names()) {
             parametersItem.getChildren().add(new TreeItem<>(new OutlineNode(key,
@@ -374,7 +365,7 @@ public class MainApp extends Application {
         root.getChildren().add(parametersItem);
 
         TreeItem<OutlineNode> examplesItem = new TreeItem<>(new OutlineNode(
-                "Examples", () -> ExamplesPane.build(document, this::refreshOutline, this::removeExample)));
+                "Examples", () -> ComponentListPane.build(ComponentKinds.EXAMPLES, document, this::refreshOutline, this::removeExample)));
         examplesItem.setExpanded(true);
         for (String name : document.getComponents().getExamples().names()) {
             examplesItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
@@ -383,7 +374,7 @@ public class MainApp extends Application {
         root.getChildren().add(examplesItem);
 
         TreeItem<OutlineNode> headersItem = new TreeItem<>(new OutlineNode(
-                "Headers", () -> HeadersPane.build(document, this::refreshOutline, this::removeHeader)));
+                "Headers", () -> ComponentListPane.build(ComponentKinds.HEADERS, document, this::refreshOutline, this::removeHeader)));
         headersItem.setExpanded(true);
         for (String name : document.getComponents().getHeaders().names()) {
             headersItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
@@ -392,7 +383,7 @@ public class MainApp extends Application {
         root.getChildren().add(headersItem);
 
         TreeItem<OutlineNode> linksItem = new TreeItem<>(new OutlineNode(
-                "Links", () -> LinksPane.build(document, this::refreshOutline, this::removeLink)));
+                "Links", () -> ComponentListPane.build(ComponentKinds.LINKS, document, this::refreshOutline, this::removeLink)));
         linksItem.setExpanded(true);
         for (String name : document.getComponents().getLinks().names()) {
             linksItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
@@ -401,7 +392,7 @@ public class MainApp extends Application {
         root.getChildren().add(linksItem);
 
         TreeItem<OutlineNode> callbacksItem = new TreeItem<>(new OutlineNode(
-                "Callbacks", () -> CallbacksPane.build(document, this::refreshOutline, this::removeCallback)));
+                "Callbacks", () -> ComponentListPane.build(ComponentKinds.CALLBACKS, document, this::refreshOutline, this::removeCallback)));
         callbacksItem.setExpanded(true);
         for (String name : document.getComponents().getCallbacks().names()) {
             callbacksItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
@@ -434,32 +425,32 @@ public class MainApp extends Application {
     }
 
     private void removeResponse(String responseName) {
-        ResponseRemoval.remove(document, responseName, confirmation,
+        ComponentRemoval.remove(ComponentKinds.RESPONSES, document, responseName, confirmation,
                 () -> refreshAndSelect("Responses"));
     }
 
     private void removeParameter(String key) {
-        ParameterRemoval.remove(document, key, confirmation,
+        ComponentRemoval.remove(ComponentKinds.PARAMETERS, document, key, confirmation,
                 () -> refreshAndSelect("Parameters"));
     }
 
     private void removeExample(String exampleName) {
-        ExampleRemoval.remove(document, exampleName, confirmation,
+        ComponentRemoval.remove(ComponentKinds.EXAMPLES, document, exampleName, confirmation,
                 () -> refreshAndSelect("Examples"));
     }
 
     private void removeHeader(String headerName) {
-        HeaderRemoval.remove(document, headerName, confirmation,
+        ComponentRemoval.remove(ComponentKinds.HEADERS, document, headerName, confirmation,
                 () -> refreshAndSelect("Headers"));
     }
 
     private void removeLink(String linkName) {
-        LinkRemoval.remove(document, linkName, confirmation,
+        ComponentRemoval.remove(ComponentKinds.LINKS, document, linkName, confirmation,
                 () -> refreshAndSelect("Links"));
     }
 
     private void removeCallback(String callbackName) {
-        CallbackRemoval.remove(document, callbackName, confirmation,
+        ComponentRemoval.remove(ComponentKinds.CALLBACKS, document, callbackName, confirmation,
                 () -> refreshAndSelect("Callbacks"));
     }
 

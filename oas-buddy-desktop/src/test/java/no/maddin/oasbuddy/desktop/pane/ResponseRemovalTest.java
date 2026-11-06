@@ -22,7 +22,7 @@ class ResponseRemovalTest {
         OasDocument document = documentWithNotFound();
         List<String> asked = new ArrayList<>();
 
-        ResponseRemoval.remove(document, "NotFound", (question, details) -> {
+        ComponentRemoval.remove(ComponentKinds.RESPONSES, document, "NotFound", (question, details) -> {
             asked.add(question + " | " + details);
             return false;
         }, () -> { });
@@ -38,7 +38,7 @@ class ResponseRemovalTest {
         OasDocument document = documentWithNotFound();
         AtomicBoolean notified = new AtomicBoolean();
 
-        ResponseRemoval.remove(document, "NotFound", (question, details) -> true, () -> notified.set(true));
+        ComponentRemoval.remove(ComponentKinds.RESPONSES, document, "NotFound", (question, details) -> true, () -> notified.set(true));
 
         assertAll(
                 () -> assertFalse(document.getComponents().getResponses().names().contains("NotFound")),
@@ -53,7 +53,7 @@ class ResponseRemovalTest {
         OasDocument document = documentWithNotFound();
         AtomicBoolean notified = new AtomicBoolean();
 
-        ResponseRemoval.remove(document, "NotFound", (question, details) -> false, () -> notified.set(true));
+        ComponentRemoval.remove(ComponentKinds.RESPONSES, document, "NotFound", (question, details) -> false, () -> notified.set(true));
 
         assertTrue(document.getComponents().getResponses().names().contains("NotFound"));
         assertFalse(notified.get());

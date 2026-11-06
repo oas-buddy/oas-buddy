@@ -21,7 +21,7 @@ class LinkRemovalTest {
         OasDocument document = documentWithGetPet();
         List<String> asked = new ArrayList<>();
 
-        LinkRemoval.remove(document, "GetPet", (question, details) -> {
+        ComponentRemoval.remove(ComponentKinds.LINKS, document, "GetPet", (question, details) -> {
             asked.add(question + " | " + details);
             return false;
         }, () -> { });
@@ -37,7 +37,7 @@ class LinkRemovalTest {
         OasDocument document = documentWithGetPet();
         AtomicBoolean notified = new AtomicBoolean();
 
-        LinkRemoval.remove(document, "GetPet", (question, details) -> true, () -> notified.set(true));
+        ComponentRemoval.remove(ComponentKinds.LINKS, document, "GetPet", (question, details) -> true, () -> notified.set(true));
 
         assertFalse(document.getComponents().getLinks().names().contains("GetPet"));
         assertTrue(notified.get());
@@ -47,7 +47,7 @@ class LinkRemovalTest {
     void keepsTheLinkWhenDeclined() {
         OasDocument document = documentWithGetPet();
 
-        LinkRemoval.remove(document, "GetPet", (question, details) -> false, () -> { });
+        ComponentRemoval.remove(ComponentKinds.LINKS, document, "GetPet", (question, details) -> false, () -> { });
 
         assertTrue(document.getComponents().getLinks().names().contains("GetPet"));
     }

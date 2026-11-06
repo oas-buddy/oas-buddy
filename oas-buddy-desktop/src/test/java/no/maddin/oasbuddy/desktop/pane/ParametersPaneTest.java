@@ -29,7 +29,7 @@ class ParametersPaneTest extends ApplicationTest {
         document.getComponents().getParameters().addParameter("Limit", "limit", "query");
         document.getComponents().getParameters().addParameter("Trace", "X-Trace", "header");
 
-        Node pane = ParametersPane.build(document, () -> { }, removalRequests::add);
+        Node pane = ComponentListPane.build(ComponentKinds.PARAMETERS, document, () -> { }, removalRequests::add);
         stage.setScene(new Scene(new StackPane(pane), 900, 600));
         stage.show();
     }

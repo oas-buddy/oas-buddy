@@ -23,7 +23,7 @@ class ParameterRemovalTest {
         OasDocument document = documentWithLimit();
         List<String> asked = new ArrayList<>();
 
-        ParameterRemoval.remove(document, "Limit", (question, details) -> {
+        ComponentRemoval.remove(ComponentKinds.PARAMETERS, document, "Limit", (question, details) -> {
             asked.add(question + " | " + details);
             return false;
         }, () -> { });
@@ -40,7 +40,7 @@ class ParameterRemovalTest {
         OasDocument document = documentWithLimit();
         AtomicBoolean notified = new AtomicBoolean();
 
-        ParameterRemoval.remove(document, "Limit", (question, details) -> true, () -> notified.set(true));
+        ComponentRemoval.remove(ComponentKinds.PARAMETERS, document, "Limit", (question, details) -> true, () -> notified.set(true));
 
         assertAll(
                 () -> assertFalse(document.getComponents().getParameters().names().contains("Limit")),
@@ -54,7 +54,7 @@ class ParameterRemovalTest {
         OasDocument document = documentWithLimit();
         AtomicBoolean notified = new AtomicBoolean();
 
-        ParameterRemoval.remove(document, "Limit", (question, details) -> false, () -> notified.set(true));
+        ComponentRemoval.remove(ComponentKinds.PARAMETERS, document, "Limit", (question, details) -> false, () -> notified.set(true));
 
         assertTrue(document.getComponents().getParameters().names().contains("Limit"));
         assertFalse(notified.get());

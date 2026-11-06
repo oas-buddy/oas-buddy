@@ -21,7 +21,7 @@ class ExampleRemovalTest {
         OasDocument document = documentWithCat();
         List<String> asked = new ArrayList<>();
 
-        ExampleRemoval.remove(document, "Cat", (question, details) -> {
+        ComponentRemoval.remove(ComponentKinds.EXAMPLES, document, "Cat", (question, details) -> {
             asked.add(question + " | " + details);
             return false;
         }, () -> { });
@@ -37,7 +37,7 @@ class ExampleRemovalTest {
         OasDocument document = documentWithCat();
         AtomicBoolean notified = new AtomicBoolean();
 
-        ExampleRemoval.remove(document, "Cat", (question, details) -> true, () -> notified.set(true));
+        ComponentRemoval.remove(ComponentKinds.EXAMPLES, document, "Cat", (question, details) -> true, () -> notified.set(true));
 
         assertFalse(document.getComponents().getExamples().names().contains("Cat"));
         assertTrue(notified.get());
@@ -47,7 +47,7 @@ class ExampleRemovalTest {
     void keepsTheExampleWhenDeclined() {
         OasDocument document = documentWithCat();
 
-        ExampleRemoval.remove(document, "Cat", (question, details) -> false, () -> { });
+        ComponentRemoval.remove(ComponentKinds.EXAMPLES, document, "Cat", (question, details) -> false, () -> { });
 
         assertTrue(document.getComponents().getExamples().names().contains("Cat"));
     }
