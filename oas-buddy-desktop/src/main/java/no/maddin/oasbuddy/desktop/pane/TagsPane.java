@@ -1,5 +1,6 @@
 package no.maddin.oasbuddy.desktop.pane;
 
+import static no.maddin.oasbuddy.desktop.pane.FormFields.nullToEmpty;
 import no.maddin.oasbuddy.core.document.OasDocument;
 import no.maddin.oasbuddy.core.model.Tag;
 import no.maddin.oasbuddy.core.model.Tags;
@@ -89,9 +90,5 @@ public final class TagsPane {
             list.addRow(row++, new Label(name), descriptionField, removeButton);
             list.add(ExternalDocsSection.build(tag.getExternalDocs()), 1, row++);
         }
-    }
-
-    private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
     }
 }

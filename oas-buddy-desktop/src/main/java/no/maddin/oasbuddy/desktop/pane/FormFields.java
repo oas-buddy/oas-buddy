@@ -131,9 +131,7 @@ final class FormFields {
     }
 
     static TextField textRow(GridPane grid, int row, String label, Supplier<String> getter, Consumer<String> setter) {
-        TextField field = new TextField(nullToEmpty(getter.get()));
-        field.textProperty().addListener((obs, oldVal, newVal) ->
-                setter.accept(newVal == null || newVal.isBlank() ? null : newVal));
+        TextField field = boundTextField(getter.get(), null, null, setter);
         grid.addRow(row, new Label(label), field);
         return field;
     }
@@ -194,7 +192,26 @@ final class FormFields {
         return field;
     }
 
-    private static String nullToEmpty(String value) {
+    static String nullToEmpty(String value) {
         return value == null ? "" : value;
+    }
+
+    /**
+     * A text field showing {@code initial}, whose every edit goes to {@code setter} — blank
+     * becoming {@code null}, so clearing a field removes the key instead of writing {@code ""}.
+     *
+     * @param prompt     the prompt text, or {@code null} for none
+     * @param styleClass a class for tests to find it by, or {@code null} for none
+     */
+    static TextField boundTextField(String initial, String prompt, String styleClass, Consumer<String> setter) {
+        TextField field = new TextField(nullToEmpty(initial));
+        if (prompt != null) {
+            field.setPromptText(prompt);
+        }
+        if (styleClass != null) {
+            field.getStyleClass().add(styleClass);
+        }
+        field.textProperty().addListener((obs, was, now) -> setter.accept(now == null || now.isBlank() ? null : now));
+        return field;
     }
 }

@@ -1,5 +1,6 @@
 package no.maddin.oasbuddy.desktop.pane;
 
+import static no.maddin.oasbuddy.desktop.pane.FormFields.nullToEmpty;
 import no.maddin.oasbuddy.core.model.OAuthFlow;
 import no.maddin.oasbuddy.core.model.OAuthFlowUrl;
 import no.maddin.oasbuddy.core.model.OAuthFlows;
@@ -206,9 +207,5 @@ public final class OAuthFlowsPane {
             details.append("\n  scopes: ").append(String.join(", ", scopes));
         }
         return details.toString();
-    }
-
-    private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
     }
 }
