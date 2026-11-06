@@ -10,3 +10,7 @@ target/
 .DS_Store
 .mise.local.toml
 .claude/worktrees
+
+# generated line-count history
+/loc-history.csv
+/loc-history.png

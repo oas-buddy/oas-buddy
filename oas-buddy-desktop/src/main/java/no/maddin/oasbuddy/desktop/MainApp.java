@@ -20,6 +20,7 @@ import no.maddin.oasbuddy.desktop.pane.SchemaPane;
 import no.maddin.oasbuddy.desktop.pane.PathRename;
 import no.maddin.oasbuddy.desktop.pane.RemovalConfirmation;
 import no.maddin.oasbuddy.desktop.pane.CallbackPane;
+import no.maddin.oasbuddy.desktop.pane.ComponentKind;
 import no.maddin.oasbuddy.desktop.pane.ComponentKinds;
 import no.maddin.oasbuddy.desktop.pane.ComponentListPane;
 import no.maddin.oasbuddy.desktop.pane.ComponentRemoval;
@@ -74,6 +75,9 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.prefs.Preferences;
 
@@ -335,82 +339,30 @@ public class MainApp extends Application {
         }
         root.getChildren().add(pathsItem);
 
-        TreeItem<OutlineNode> schemasItem = new TreeItem<>(new OutlineNode(
-                "Schemas", () -> SchemasPane.build(document, this::refreshOutline, this::removeSchema)));
-        schemasItem.setExpanded(true);
-        for (String name : document.getComponents().getSchemas().names()) {
-            schemasItem.getChildren().add(new TreeItem<>(
-                    new OutlineNode(name, () -> SchemaPane.build(document, name, this::renameSchema, this::removeSchema))));
-        }
-        root.getChildren().add(schemasItem);
+        root.getChildren().add(section("Schemas",
+                () -> SchemasPane.build(document, this::refreshOutline, this::removeSchema),
+                document.getComponents().getSchemas().names(),
+                name -> SchemaPane.build(document, name, this::renameSchema, this::removeSchema)));
 
-        TreeItem<OutlineNode> responsesItem = new TreeItem<>(new OutlineNode(
-                "Responses", () -> ComponentListPane.build(ComponentKinds.RESPONSES, document, this::refreshOutline, this::removeResponse)));
-        responsesItem.setExpanded(true);
-        for (String name : document.getComponents().getResponses().names()) {
-            responsesItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
-                    () -> ResponsePane.build(document, name,
-                            () -> document.getComponents().getSchemas().names(), replaceConfirmation,
-                            this::removeResponse))));
-        }
-        root.getChildren().add(responsesItem);
+        Supplier<List<String>> schemaNames = () -> document.getComponents().getSchemas().names();
+        root.getChildren().addAll(List.of(
+                componentSection(ComponentKinds.RESPONSES, (name, remove) ->
+                        ResponsePane.build(document, name, schemaNames, replaceConfirmation, remove)),
+                componentSection(ComponentKinds.PARAMETERS, (name, remove) ->
+                        ParameterPane.build(document, name, replaceConfirmation, remove)),
+                componentSection(ComponentKinds.EXAMPLES, (name, remove) ->
+                        ExamplePane.build(document, name, remove)),
+                componentSection(ComponentKinds.HEADERS, (name, remove) ->
+                        HeaderPane.build(document, name, remove)),
+                componentSection(ComponentKinds.LINKS, (name, remove) ->
+                        LinkPane.build(document, name, remove)),
+                componentSection(ComponentKinds.CALLBACKS, (name, remove) ->
+                        CallbackPane.build(document, name, schemaNames, replaceConfirmation, remove))));
 
-        TreeItem<OutlineNode> parametersItem = new TreeItem<>(new OutlineNode(
-                "Parameters", () -> ComponentListPane.build(ComponentKinds.PARAMETERS, document, this::refreshOutline, this::removeParameter)));
-        parametersItem.setExpanded(true);
-        for (String key : document.getComponents().getParameters().names()) {
-            parametersItem.getChildren().add(new TreeItem<>(new OutlineNode(key,
-                    () -> ParameterPane.build(document, key, replaceConfirmation, this::removeParameter))));
-        }
-        root.getChildren().add(parametersItem);
-
-        TreeItem<OutlineNode> examplesItem = new TreeItem<>(new OutlineNode(
-                "Examples", () -> ComponentListPane.build(ComponentKinds.EXAMPLES, document, this::refreshOutline, this::removeExample)));
-        examplesItem.setExpanded(true);
-        for (String name : document.getComponents().getExamples().names()) {
-            examplesItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
-                    () -> ExamplePane.build(document, name, this::removeExample))));
-        }
-        root.getChildren().add(examplesItem);
-
-        TreeItem<OutlineNode> headersItem = new TreeItem<>(new OutlineNode(
-                "Headers", () -> ComponentListPane.build(ComponentKinds.HEADERS, document, this::refreshOutline, this::removeHeader)));
-        headersItem.setExpanded(true);
-        for (String name : document.getComponents().getHeaders().names()) {
-            headersItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
-                    () -> HeaderPane.build(document, name, this::removeHeader))));
-        }
-        root.getChildren().add(headersItem);
-
-        TreeItem<OutlineNode> linksItem = new TreeItem<>(new OutlineNode(
-                "Links", () -> ComponentListPane.build(ComponentKinds.LINKS, document, this::refreshOutline, this::removeLink)));
-        linksItem.setExpanded(true);
-        for (String name : document.getComponents().getLinks().names()) {
-            linksItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
-                    () -> LinkPane.build(document, name, this::removeLink))));
-        }
-        root.getChildren().add(linksItem);
-
-        TreeItem<OutlineNode> callbacksItem = new TreeItem<>(new OutlineNode(
-                "Callbacks", () -> ComponentListPane.build(ComponentKinds.CALLBACKS, document, this::refreshOutline, this::removeCallback)));
-        callbacksItem.setExpanded(true);
-        for (String name : document.getComponents().getCallbacks().names()) {
-            callbacksItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
-                    () -> CallbackPane.build(document, name, () -> document.getComponents().getSchemas().names(),
-                            replaceConfirmation, this::removeCallback))));
-        }
-        root.getChildren().add(callbacksItem);
-
-        TreeItem<OutlineNode> securitySchemesItem = new TreeItem<>(new OutlineNode(
-                "Security Schemes",
-                () -> SecuritySchemesPane.build(document, this::refreshOutline, this::removeSecurityScheme)));
-        securitySchemesItem.setExpanded(true);
-        for (String name : document.getComponents().getSecuritySchemes().names()) {
-            securitySchemesItem.getChildren().add(new TreeItem<>(new OutlineNode(name,
-                    () -> SecuritySchemePane.build(document, name, confirmation,
-                            this::removeSecurityScheme))));
-        }
-        root.getChildren().add(securitySchemesItem);
+        root.getChildren().add(section("Security Schemes",
+                () -> SecuritySchemesPane.build(document, this::refreshOutline, this::removeSecurityScheme),
+                document.getComponents().getSecuritySchemes().names(),
+                name -> SecuritySchemePane.build(document, name, confirmation, this::removeSecurityScheme)));
 
         root.getChildren().add(new TreeItem<>(new OutlineNode(
                 "Security", () -> SecurityPane.build(document, this::refreshOutline))));
@@ -419,39 +371,31 @@ public class MainApp extends Application {
         outlineView.setShowRoot(true);
     }
 
+    /** An expanded outline section: its list pane, then one child per entry. */
+    private TreeItem<OutlineNode> section(String label, Supplier<Node> list, List<String> names,
+                                          Function<String, Node> item) {
+        TreeItem<OutlineNode> section = new TreeItem<>(new OutlineNode(label, list));
+        section.setExpanded(true);
+        for (String name : names) {
+            section.getChildren().add(new TreeItem<>(new OutlineNode(name, () -> item.apply(name))));
+        }
+        return section;
+    }
+
+    /** A reusable-component section; {@code item} builds an entry's editor, given the request to remove it. */
+    private <T> TreeItem<OutlineNode> componentSection(ComponentKind<T> kind,
+                                                       BiFunction<String, Consumer<String>, Node> item) {
+        Consumer<String> remove = name -> ComponentRemoval.remove(kind, document, name, confirmation,
+                () -> refreshAndSelect(kind.plural()));
+        return section(kind.plural(),
+                () -> ComponentListPane.build(kind, document, this::refreshOutline, remove),
+                kind.access().apply(document.getComponents()).names(),
+                name -> item.apply(name, remove));
+    }
+
     private void removeSchema(String schemaName) {
         SchemaRemoval.remove(document, schemaName, confirmation,
                 () -> refreshAndSelect("Schemas"));
-    }
-
-    private void removeResponse(String responseName) {
-        ComponentRemoval.remove(ComponentKinds.RESPONSES, document, responseName, confirmation,
-                () -> refreshAndSelect("Responses"));
-    }
-
-    private void removeParameter(String key) {
-        ComponentRemoval.remove(ComponentKinds.PARAMETERS, document, key, confirmation,
-                () -> refreshAndSelect("Parameters"));
-    }
-
-    private void removeExample(String exampleName) {
-        ComponentRemoval.remove(ComponentKinds.EXAMPLES, document, exampleName, confirmation,
-                () -> refreshAndSelect("Examples"));
-    }
-
-    private void removeHeader(String headerName) {
-        ComponentRemoval.remove(ComponentKinds.HEADERS, document, headerName, confirmation,
-                () -> refreshAndSelect("Headers"));
-    }
-
-    private void removeLink(String linkName) {
-        ComponentRemoval.remove(ComponentKinds.LINKS, document, linkName, confirmation,
-                () -> refreshAndSelect("Links"));
-    }
-
-    private void removeCallback(String callbackName) {
-        ComponentRemoval.remove(ComponentKinds.CALLBACKS, document, callbackName, confirmation,
-                () -> refreshAndSelect("Callbacks"));
     }
 
     private void removeTag(String tagName) {
