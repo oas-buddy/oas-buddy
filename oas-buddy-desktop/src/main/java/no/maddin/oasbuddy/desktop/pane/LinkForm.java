@@ -1,5 +1,6 @@
 package no.maddin.oasbuddy.desktop.pane;
 
+import static no.maddin.oasbuddy.desktop.pane.FormFields.nullToEmpty;
 import atlantafx.base.theme.Styles;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
@@ -44,10 +45,10 @@ final class LinkForm {
     private static void refresh(Link link, ComponentCatalog catalog, VBox box) {
         box.getChildren().clear();
         box.getChildren().add(labelled("Operation", operationIdBox(link, catalog)));
-        box.getChildren().add(labelled("Operation ref", textField(link.getOperationRef(), OPERATION_REF_CLASS,
-                "#/paths/~1pets/get", link::setOperationRef)));
-        box.getChildren().add(labelled("Description", textField(link.getDescription(), DESCRIPTION_CLASS,
-                "description", link::setDescription)));
+        box.getChildren().add(labelled("Operation ref", FormFields.boundTextField(link.getOperationRef(),
+                "#/paths/~1pets/get", OPERATION_REF_CLASS, link::setOperationRef)));
+        box.getChildren().add(labelled("Description", FormFields.boundTextField(link.getDescription(),
+                "description", DESCRIPTION_CLASS, link::setDescription)));
         box.getChildren().add(labelled("Request body", requestBodyField(link)));
 
         Label parametersTitle = new Label("Parameters");
@@ -139,15 +140,6 @@ final class LinkForm {
         return row;
     }
 
-    private static TextField textField(String initial, String styleClass, String prompt,
-                                       java.util.function.Consumer<String> setter) {
-        TextField field = new TextField(nullToEmpty(initial));
-        field.getStyleClass().add(styleClass);
-        field.setPromptText(prompt);
-        field.textProperty().addListener((obs, was, now) -> setter.accept(now == null || now.isBlank() ? null : now));
-        return field;
-    }
-
     private static HBox labelled(String label, javafx.scene.Node control) {
         Label text = new Label(label);
         text.setMinWidth(100);
@@ -155,9 +147,5 @@ final class LinkForm {
         HBox row = new HBox(8, text, control);
         row.setAlignment(Pos.CENTER_LEFT);
         return row;
-    }
-
-    private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
     }
 }

@@ -1,5 +1,6 @@
 package no.maddin.oasbuddy.desktop.pane;
 
+import static no.maddin.oasbuddy.desktop.pane.FormFields.nullToEmpty;
 import no.maddin.oasbuddy.core.model.Parameter;
 import no.maddin.oasbuddy.core.model.Schema;
 import javafx.scene.control.CheckBox;
@@ -70,9 +71,5 @@ final class ParameterForm {
         field.setPromptText("type");
         field.textProperty().addListener((obs, oldVal, newVal) -> parameter.getSchema().setType(newVal));
         return field;
-    }
-
-    private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
     }
 }

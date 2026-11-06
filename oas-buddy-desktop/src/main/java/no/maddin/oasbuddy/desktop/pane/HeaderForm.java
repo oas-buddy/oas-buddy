@@ -1,5 +1,6 @@
 package no.maddin.oasbuddy.desktop.pane;
 
+import static no.maddin.oasbuddy.desktop.pane.FormFields.nullToEmpty;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.TextField;
 import no.maddin.oasbuddy.core.model.Header;
@@ -16,11 +17,7 @@ final class HeaderForm {
     }
 
     static TextField descriptionField(Header header) {
-        TextField field = new TextField(nullToEmpty(header.getDescription()));
-        field.setPromptText("description");
-        field.textProperty().addListener((obs, oldVal, newVal) ->
-                header.setDescription(newVal == null || newVal.isBlank() ? null : newVal));
-        return field;
+        return FormFields.boundTextField(header.getDescription(), "description", null, header::setDescription);
     }
 
     static CheckBox requiredBox(Header header) {
@@ -37,9 +34,5 @@ final class HeaderForm {
         field.setPromptText("type");
         field.textProperty().addListener((obs, oldVal, newVal) -> header.getSchema().setType(newVal));
         return field;
-    }
-
-    private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
     }
 }

@@ -17,11 +17,7 @@ final class ExampleForm {
     }
 
     static TextField summaryField(Example example) {
-        TextField field = new TextField(nullToEmpty(example.getSummary()));
-        field.setPromptText("summary");
-        field.textProperty().addListener((obs, oldVal, newVal) ->
-                example.setSummary(newVal == null || newVal.isBlank() ? null : newVal));
-        return field;
+        return FormFields.boundTextField(example.getSummary(), "summary", null, example::setSummary);
     }
 
     /**
@@ -41,14 +37,6 @@ final class ExampleForm {
     }
 
     static TextField externalValueField(Example example) {
-        TextField field = new TextField(nullToEmpty(example.getExternalValue()));
-        field.setPromptText("https://…");
-        field.textProperty().addListener((obs, oldVal, newVal) ->
-                example.setExternalValue(newVal == null || newVal.isBlank() ? null : newVal));
-        return field;
-    }
-
-    private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
+        return FormFields.boundTextField(example.getExternalValue(), "https://…", null, example::setExternalValue);
     }
 }

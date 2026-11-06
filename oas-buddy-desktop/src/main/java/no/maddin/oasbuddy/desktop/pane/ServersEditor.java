@@ -1,5 +1,6 @@
 package no.maddin.oasbuddy.desktop.pane;
 
+import static no.maddin.oasbuddy.desktop.pane.FormFields.nullToEmpty;
 import atlantafx.base.theme.Styles;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -161,10 +162,8 @@ final class ServersEditor {
                             : Arrays.stream(newVal.split("\\s*,\\s*")).filter(v -> !v.isEmpty()).toList()));
             HBox.setHgrow(enumField, Priority.ALWAYS);
 
-            TextField descriptionField = new TextField(nullToEmpty(variable.getDescription()));
-            descriptionField.setPromptText("description");
-            descriptionField.textProperty().addListener((obs, oldVal, newVal) ->
-                    variable.setDescription(newVal == null || newVal.isBlank() ? null : newVal));
+            TextField descriptionField = FormFields.boundTextField(variable.getDescription(), "description", null,
+                    variable::setDescription);
             HBox.setHgrow(descriptionField, Priority.ALWAYS);
 
             HBox row = new HBox(8, nameField, defaultField, enumField, descriptionField,
@@ -237,9 +236,5 @@ final class ServersEditor {
             return true;
         });
         return new VBox(8, overrideBox, editorSlot);
-    }
-
-    private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
     }
 }

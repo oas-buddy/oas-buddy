@@ -1,5 +1,6 @@
 package no.maddin.oasbuddy.desktop.pane;
 
+import static no.maddin.oasbuddy.desktop.pane.FormFields.nullToEmpty;
 import no.maddin.oasbuddy.core.model.ApiResponse;
 import no.maddin.oasbuddy.core.model.Operation;
 import no.maddin.oasbuddy.core.model.RequestBody;
@@ -369,9 +370,5 @@ public final class OperationPane {
                     responses.referTo(statusCode, to);
                     return true;
                 }, refresh);
-    }
-
-    private static String nullToEmpty(String value) {
-        return value == null ? "" : value;
     }
 }
