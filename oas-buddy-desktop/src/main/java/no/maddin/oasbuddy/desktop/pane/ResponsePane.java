@@ -1,7 +1,6 @@
 package no.maddin.oasbuddy.desktop.pane;
 
 import no.maddin.oasbuddy.core.document.OasDocument;
-import no.maddin.oasbuddy.core.model.ApiResponse;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -24,24 +23,20 @@ public final class ResponsePane {
      */
     public static Node build(OasDocument document, String responseName, Supplier<List<String>> schemaNames,
                              RemovalConfirmation confirmation, Consumer<String> onRemoveResponse) {
-        ApiResponse response = document.getComponents().getResponses().getResponse(responseName);
-        Node header = FormFields.headerWithDelete("Response: " + responseName, "delete-response", "Delete response",
-                () -> onRemoveResponse.accept(responseName));
-        if (response == null) {
-            return FormFields.root(header, FormFields.notEditable(responseName, "a response"));
-        }
+        return ComponentItemPane.build(ComponentKinds.RESPONSES, document, responseName, onRemoveResponse, response -> {
+            GridPane grid = FormFields.grid();
+            TextField description = ResponseForm.descriptionField(response);
+            description.setId("response-description");
+            grid.addRow(0, new Label("Description"), description);
 
-        GridPane grid = FormFields.grid();
-        TextField description = ResponseForm.descriptionField(response);
-        description.setId("response-description");
-        grid.addRow(0, new Label("Description"), description);
-
-        return FormFields.root(header, grid,
-                FormFields.heading("Content"),
-                ContentEditor.build(response.getContent(), schemaNames, ComponentCatalog.of(document), confirmation),
-                FormFields.heading("Headers"),
-                HeadersEditor.build(response.getHeaders(), ComponentCatalog.of(document), confirmation),
-                FormFields.heading("Links"),
-                LinksEditor.build(response.getLinks(), ComponentCatalog.of(document), confirmation));
+            ComponentCatalog catalog = ComponentCatalog.of(document);
+            return List.of(grid,
+                    FormFields.heading("Content"),
+                    ContentEditor.build(response.getContent(), schemaNames, catalog, confirmation),
+                    FormFields.heading("Headers"),
+                    HeadersEditor.build(response.getHeaders(), catalog, confirmation),
+                    FormFields.heading("Links"),
+                    LinksEditor.build(response.getLinks(), catalog, confirmation));
+        });
     }
 }

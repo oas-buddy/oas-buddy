@@ -29,7 +29,7 @@ class ExamplesPaneTest extends ApplicationTest {
         document.getComponents().getExamples().addExample("Cat").setSummary("A cat");
         document.getComponents().getExamples().addExample("Dog").setSummary("A dog");
 
-        Node pane = ExamplesPane.build(document, () -> { }, removalRequests::add);
+        Node pane = ComponentListPane.build(ComponentKinds.EXAMPLES, document, () -> { }, removalRequests::add);
         stage.setScene(new Scene(new StackPane(pane), 900, 600));
         stage.show();
     }

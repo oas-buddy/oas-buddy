@@ -21,7 +21,7 @@ class HeaderRemovalTest {
         OasDocument document = documentWithRate();
         List<String> asked = new ArrayList<>();
 
-        HeaderRemoval.remove(document, "Rate", (question, details) -> {
+        ComponentRemoval.remove(ComponentKinds.HEADERS, document, "Rate", (question, details) -> {
             asked.add(question + " | " + details);
             return false;
         }, () -> { });
@@ -37,7 +37,7 @@ class HeaderRemovalTest {
         OasDocument document = documentWithRate();
         AtomicBoolean notified = new AtomicBoolean();
 
-        HeaderRemoval.remove(document, "Rate", (question, details) -> true, () -> notified.set(true));
+        ComponentRemoval.remove(ComponentKinds.HEADERS, document, "Rate", (question, details) -> true, () -> notified.set(true));
 
         assertFalse(document.getComponents().getHeaders().names().contains("Rate"));
         assertTrue(notified.get());
@@ -47,7 +47,7 @@ class HeaderRemovalTest {
     void keepsTheHeaderWhenDeclined() {
         OasDocument document = documentWithRate();
 
-        HeaderRemoval.remove(document, "Rate", (question, details) -> false, () -> { });
+        ComponentRemoval.remove(ComponentKinds.HEADERS, document, "Rate", (question, details) -> false, () -> { });
 
         assertTrue(document.getComponents().getHeaders().names().contains("Rate"));
     }

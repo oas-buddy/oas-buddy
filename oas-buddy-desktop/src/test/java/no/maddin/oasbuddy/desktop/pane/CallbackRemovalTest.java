@@ -21,7 +21,7 @@ class CallbackRemovalTest {
         OasDocument document = documentWithEvent();
         List<String> asked = new ArrayList<>();
 
-        CallbackRemoval.remove(document, "Event", (question, details) -> {
+        ComponentRemoval.remove(ComponentKinds.CALLBACKS, document, "Event", (question, details) -> {
             asked.add(question + " | " + details);
             return false;
         }, () -> { });
@@ -37,7 +37,7 @@ class CallbackRemovalTest {
         OasDocument document = documentWithEvent();
         AtomicBoolean notified = new AtomicBoolean();
 
-        CallbackRemoval.remove(document, "Event", (question, details) -> true, () -> notified.set(true));
+        ComponentRemoval.remove(ComponentKinds.CALLBACKS, document, "Event", (question, details) -> true, () -> notified.set(true));
 
         assertFalse(document.getComponents().getCallbacks().names().contains("Event"));
         assertTrue(notified.get());
@@ -47,7 +47,7 @@ class CallbackRemovalTest {
     void keepsTheCallbackWhenDeclined() {
         OasDocument document = documentWithEvent();
 
-        CallbackRemoval.remove(document, "Event", (question, details) -> false, () -> { });
+        ComponentRemoval.remove(ComponentKinds.CALLBACKS, document, "Event", (question, details) -> false, () -> { });
 
         assertTrue(document.getComponents().getCallbacks().names().contains("Event"));
     }

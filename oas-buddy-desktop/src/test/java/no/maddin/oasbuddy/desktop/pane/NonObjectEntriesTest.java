@@ -102,9 +102,9 @@ class NonObjectEntriesTest extends ApplicationTest {
     @Test
     void theListPanesStillListTheEntry() {
         show(() -> new javafx.scene.layout.VBox(
-                ResponsesPane.build(document, () -> { }, name -> { }),
-                ParametersPane.build(document, () -> { }, name -> { }),
-                ExamplesPane.build(document, () -> { }, name -> { }),
+                ComponentListPane.build(ComponentKinds.RESPONSES, document, () -> { }, name -> { }),
+                ComponentListPane.build(ComponentKinds.PARAMETERS, document, () -> { }, name -> { }),
+                ComponentListPane.build(ComponentKinds.EXAMPLES, document, () -> { }, name -> { }),
                 SecuritySchemesPane.build(document, () -> { }, name -> { })));
 
         assertAll(

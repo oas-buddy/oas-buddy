@@ -29,7 +29,7 @@ class ResponsesPaneTest extends ApplicationTest {
         document.getComponents().getResponses().addResponse("NotFound").setDescription("Not here");
         document.getComponents().getResponses().addResponse("Error").setDescription("Broken");
 
-        Node pane = ResponsesPane.build(document, () -> { }, removalRequests::add);
+        Node pane = ComponentListPane.build(ComponentKinds.RESPONSES, document, () -> { }, removalRequests::add);
         stage.setScene(new Scene(new StackPane(pane), 900, 600));
         stage.show();
     }
