@@ -68,7 +68,7 @@ class LinksEditorTest extends ApplicationTest {
     }
 
     private void addLink(String name) {
-        interact(() -> ((TextField) byClass(LinksEditor.NEW_NAME_CLASS)).setText(name));
+        interact(() -> ((TextField) byClass("new-link-name")).setText(name));
         interact(() -> button("Add link").fire());
     }
 
@@ -121,14 +121,14 @@ class LinksEditorTest extends ApplicationTest {
     @Test
     void aResponseCanReferToAReusableLinkAndSwitchingToInlineCopiesIt() {
         @SuppressWarnings("unchecked")
-        ComboBox<String> components = (ComboBox<String>) byClass(LinksEditor.REFERENCE_CLASS);
+        ComboBox<String> components = (ComboBox<String>) byClass("reference-link");
         interact(() -> components.setValue("Shared"));
         interact(() -> button("Add reference").fire());
 
         assertEquals("Shared", created.getLinks().get("Shared").getReferencedLinkName());
 
         @SuppressWarnings("unchecked")
-        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass(LinksEditor.SOURCE_CLASS);
+        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass("link-source");
         interact(() -> picker.setValue(SourceChoice.INLINE));
 
         assertFalse(created.getLinks().get("Shared").isReference());
@@ -143,7 +143,7 @@ class LinksEditorTest extends ApplicationTest {
         confirmAnswer.set(false);
 
         @SuppressWarnings("unchecked")
-        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass(LinksEditor.SOURCE_CLASS);
+        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass("link-source");
         interact(() -> picker.setValue(new SourceChoice("Shared")));
 
         assertTrue(asked.get());
@@ -160,7 +160,7 @@ class LinksEditorTest extends ApplicationTest {
         assertTrue(lookup((Node n) -> n instanceof Label l && "(not an object)".equals(l.getText()))
                 .tryQuery().isPresent());
 
-        Node row = lookup("." + LinksEditor.ROW_CLASS).query();
+        Node row = lookup("." + "link-row").query();
         interact(() -> ((Button) row.lookup(".button")).fire());
         assertFalse(document.getRoot().get("paths").get("/pets").get("post").get("responses").get("201")
                 .has("links"));

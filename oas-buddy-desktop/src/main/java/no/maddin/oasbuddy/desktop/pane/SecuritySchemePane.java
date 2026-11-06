@@ -59,20 +59,13 @@ public final class SecuritySchemePane {
         typeBox.setId("security-scheme-type");
         typeBox.getItems().addAll(SecurityScheme.EDITABLE_TYPES);
         typeBox.setValue(scheme.getType());
-        // Reverting a declined change would otherwise re-enter this listener.
-        boolean[] reverting = {false};
-        typeBox.valueProperty().addListener((obs, oldType, newType) -> {
-            if (reverting[0]) {
-                return;
-            }
+        FormFields.guarded(typeBox.valueProperty(), (oldType, newType) -> {
             if (!confirmTypeChange(scheme, schemeName, oldType, newType, confirmation)) {
-                reverting[0] = true;
-                typeBox.setValue(oldType);
-                reverting[0] = false;
-                return;
+                return false;
             }
             scheme.setType(newType);
             fillTyped(scheme, typed, confirmation);
+            return true;
         });
         common.addRow(0, new Label("Type"), typeBox);
         FormFields.textAreaRow(common, 1, "Description", scheme::getDescription, scheme::setDescription);

@@ -135,35 +135,20 @@ final class ParametersEditor {
     private static ComboBox<SourceChoice> sourcePicker(Parameters parameters, Parameter parameter,
                                                        ComponentCatalog catalog, RemovalConfirmation confirmation,
                                                        Runnable refresh) {
-        ComboBox<SourceChoice> picker = new ComboBox<>();
-        picker.getStyleClass().add("parameter-source");
         SourceChoice current = parameter.isReference()
                 ? new SourceChoice(parameter.getReferencedParameterName())
                 : SourceChoice.INLINE;
-        picker.getItems().addAll(SourceChoice.choices(catalog.parameterNames(), current));
-        picker.setValue(current);
-
-        // Reverting a declined switch would otherwise re-enter this listener.
-        boolean[] reverting = {false};
-        picker.valueProperty().addListener((obs, was, now) -> {
-            if (reverting[0] || now == null || now.equals(was)) {
-                return;
-            }
-            if (now.isInline()) {
-                parameters.defineInline(parameter, catalog.parameter(was.name()));
-            } else if (!parameter.isReference() && !confirmation.confirm(
-                    "Replace the inline parameter \"" + parameter.getName() + "\" with a reference to \""
-                            + now.name() + "\"?",
-                    "Its name, location and schema are defined only here, and will be discarded.")) {
-                reverting[0] = true;
-                picker.setValue(was);
-                reverting[0] = false;
-                return;
-            } else {
-                parameters.referTo(parameter, now.name());
-            }
-            refresh.run();
-        });
-        return picker;
+        return SourceChoice.picker("parameter-source", current, catalog.parameterNames(),
+                was -> parameters.defineInline(parameter, catalog.parameter(was)),
+                to -> {
+                    if (!parameter.isReference() && !confirmation.confirm(
+                            "Replace the inline parameter \"" + parameter.getName() + "\" with a reference to \""
+                                    + to + "\"?",
+                            "Its name, location and schema are defined only here, and will be discarded.")) {
+                        return false;
+                    }
+                    parameters.referTo(parameter, to);
+                    return true;
+                }, refresh);
     }
 }

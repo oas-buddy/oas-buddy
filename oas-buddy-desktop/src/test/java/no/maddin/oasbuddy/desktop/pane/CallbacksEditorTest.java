@@ -72,8 +72,8 @@ class CallbacksEditorTest extends ApplicationTest {
     }
 
     private void addCallback(String name) {
-        interact(() -> ((TextField) byClass(CallbacksEditor.NEW_NAME_CLASS)).setText(name));
-        interact(() -> ((Button) byClass(CallbacksEditor.ADD_CLASS)).fire());
+        interact(() -> ((TextField) byClass("new-callback-name")).setText(name));
+        interact(() -> ((Button) byClass("add-callback")).fire());
     }
 
     private void addExpression(String expression) {
@@ -173,14 +173,14 @@ class CallbacksEditorTest extends ApplicationTest {
     @Test
     void aCallbackCanReferToAReusableOneAndSwitchingToInlineCopiesIt() {
         @SuppressWarnings("unchecked")
-        ComboBox<String> components = (ComboBox<String>) byClass(CallbacksEditor.REFERENCE_CLASS);
+        ComboBox<String> components = (ComboBox<String>) byClass("reference-callback");
         interact(() -> components.setValue("Shared"));
         interact(() -> button("Add reference").fire());
 
         assertEquals("Shared", subscribe.getCallbacks().get("Shared").getReferencedCallbackName());
 
         @SuppressWarnings("unchecked")
-        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass(CallbacksEditor.SOURCE_CLASS);
+        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass("callback-source");
         interact(() -> picker.setValue(SourceChoice.INLINE));
 
         assertFalse(subscribe.getCallbacks().get("Shared").isReference());
@@ -195,7 +195,7 @@ class CallbacksEditorTest extends ApplicationTest {
         confirmAnswer.set(false);
 
         @SuppressWarnings("unchecked")
-        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass(CallbacksEditor.SOURCE_CLASS);
+        ComboBox<SourceChoice> picker = (ComboBox<SourceChoice>) byClass("callback-source");
         interact(() -> picker.setValue(new SourceChoice("Shared")));
 
         assertEquals(1, asked.size());
@@ -242,9 +242,9 @@ class CallbacksEditorTest extends ApplicationTest {
 
         TitledPane nested = (TitledPane) byClass(PathItemPane.OPERATION_CLASS);
         interact(() -> nested.setExpanded(true));
-        TextField newName = nested.getContent().lookupAll("." + CallbacksEditor.NEW_NAME_CLASS).stream()
+        TextField newName = nested.getContent().lookupAll("." + "new-callback-name").stream()
                 .map(TextField.class::cast).findFirst().orElseThrow();
-        Button add = (Button) nested.getContent().lookup("." + CallbacksEditor.ADD_CLASS);
+        Button add = (Button) nested.getContent().lookup("." + "add-callback");
         interact(() -> newName.setText("inner"));
         interact(add::fire);
 

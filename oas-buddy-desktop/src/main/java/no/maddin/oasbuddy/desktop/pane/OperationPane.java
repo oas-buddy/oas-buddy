@@ -355,36 +355,20 @@ public final class OperationPane {
     private static ComboBox<SourceChoice> sourcePicker(Responses responses, String statusCode,
                                                          ApiResponse response, ComponentCatalog responseCatalog,
                                                          RemovalConfirmation confirmation, Runnable refresh) {
-        ComboBox<SourceChoice> picker = new ComboBox<>();
-        picker.getStyleClass().add("response-source");
         SourceChoice current = response.isReference()
                 ? new SourceChoice(response.getReferencedResponseName())
                 : SourceChoice.INLINE;
-        picker.getItems().addAll(SourceChoice.choices(responseCatalog.responseNames(), current));
-        picker.setValue(current);
-
-        // Reverting a declined switch would otherwise re-enter this listener.
-        boolean[] reverting = {false};
-        picker.valueProperty().addListener((obs, was, now) -> {
-            if (reverting[0] || now == null || now.equals(was)) {
-                return;
-            }
-            if (now.isInline()) {
-                responses.defineInline(statusCode, responseCatalog.response(was.name()));
-            } else if (!response.isReference() && !response.isEmpty()
-                    && !confirmation.confirm(
-                            "Replace the inline " + statusCode + " response with a reference to \"" + now.name() + "\"?",
+        return SourceChoice.picker("response-source", current, responseCatalog.responseNames(),
+                was -> responses.defineInline(statusCode, responseCatalog.response(was)),
+                to -> {
+                    if (!response.isReference() && !response.isEmpty() && !confirmation.confirm(
+                            "Replace the inline " + statusCode + " response with a reference to \"" + to + "\"?",
                             "Its description and content are defined only here, and will be discarded.")) {
-                reverting[0] = true;
-                picker.setValue(was);
-                reverting[0] = false;
-                return;
-            } else {
-                responses.referTo(statusCode, now.name());
-            }
-            refresh.run();
-        });
-        return picker;
+                        return false;
+                    }
+                    responses.referTo(statusCode, to);
+                    return true;
+                }, refresh);
     }
 
     private static String nullToEmpty(String value) {
