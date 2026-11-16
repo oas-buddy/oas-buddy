@@ -2,7 +2,14 @@ package no.maddin.oasbuddy.core.validation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import no.maddin.oasbuddy.core.document.OasDocument;
+import no.maddin.oasbuddy.core.model.Callbacks;
+import no.maddin.oasbuddy.core.model.ComponentCallbacks;
+import no.maddin.oasbuddy.core.model.ComponentLinks;
+import no.maddin.oasbuddy.core.model.ComponentResponses;
 import no.maddin.oasbuddy.core.model.HttpMethod;
+import no.maddin.oasbuddy.core.model.Operation;
+import no.maddin.oasbuddy.core.model.ResponseLinks;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -28,14 +35,18 @@ final class LinkCheck {
     static List<ValidationMessage> check(JsonNode root) {
         List<ValidationMessage> messages = new ArrayList<>();
         Set<String> ids = new HashSet<>();
-        collectIds(root.path("paths"), ids);
+        JsonNode paths = root.path(OasDocument.PATHS);
+        collectIds(paths, ids);
         Walker walker = new Walker(ids, messages);
 
-        walker.pathItems(root.path("paths"), List.of("paths"));
-        JsonNode components = root.path("components");
-        walker.links(components.path("links"), List.of("components", "links"));
-        walker.responses(components.path("responses"), List.of("components", "responses"));
-        walker.callbacks(components.path("callbacks"), List.of("components", "callbacks"));
+        walker.pathItems(paths, List.of(OasDocument.PATHS));
+        JsonNode components = root.path(OasDocument.COMPONENTS);
+        walker.links(components.path(ComponentLinks.SECTION),
+                List.of(OasDocument.COMPONENTS, ComponentLinks.SECTION));
+        walker.responses(components.path(ComponentResponses.SECTION),
+                List.of(OasDocument.COMPONENTS, ComponentResponses.SECTION));
+        walker.callbacks(components.path(ComponentCallbacks.SECTION),
+                List.of(OasDocument.COMPONENTS, ComponentCallbacks.SECTION));
         return messages;
     }
 
@@ -52,18 +63,23 @@ final class LinkCheck {
     private static void collectItemIds(JsonNode pathItem, Set<String> ids) {
         for (HttpMethod method : HttpMethod.values()) {
             if (pathItem.path(method.fieldName()) instanceof ObjectNode operation) {
-                String id = operation.path("operationId").asText(null);
+                String id = operation.path(Operation.OPERATION_ID).asText(null);
                 if (id != null) {
                     ids.add(id);
                 }
-                if (operation.path("callbacks") instanceof ObjectNode callbacks) {
-                    for (JsonNode callback : callbacks) {
-                        if (callback instanceof ObjectNode expressions) {
-                            for (JsonNode nested : expressions) {
-                                collectItemIds(nested, ids);
-                            }
-                        }
-                    }
+                collectCallbackIds(operation.path(Callbacks.FIELD), ids);
+            }
+        }
+    }
+
+    private static void collectCallbackIds(JsonNode callbacks, Set<String> ids) {
+        if (!(callbacks instanceof ObjectNode)) {
+            return;
+        }
+        for (JsonNode callback : callbacks) {
+            if (callback instanceof ObjectNode expressions) {
+                for (JsonNode nested : expressions) {
+                    collectItemIds(nested, ids);
                 }
             }
         }
@@ -83,8 +99,8 @@ final class LinkCheck {
             for (HttpMethod method : HttpMethod.values()) {
                 if (pathItem.path(method.fieldName()) instanceof ObjectNode operation) {
                     List<String> at = with(location, method.fieldName());
-                    responses(operation.path("responses"), with(at, "responses"));
-                    callbacks(operation.path("callbacks"), with(at, "callbacks"));
+                    responses(operation.path(Operation.RESPONSES), with(at, Operation.RESPONSES));
+                    callbacks(operation.path(Callbacks.FIELD), with(at, Callbacks.FIELD));
                 }
             }
         }
@@ -100,7 +116,8 @@ final class LinkCheck {
         void responses(JsonNode responses, List<String> location) {
             if (responses instanceof ObjectNode) {
                 for (Map.Entry<String, JsonNode> response : responses.properties()) {
-                    links(response.getValue().path("links"), with(with(location, response.getKey()), "links"));
+                    links(response.getValue().path(ResponseLinks.FIELD),
+                            with(with(location, response.getKey()), ResponseLinks.FIELD));
                 }
             }
         }
@@ -117,7 +134,7 @@ final class LinkCheck {
         }
 
         private void check(ObjectNode link, String where) {
-            String id = link.path("operationId").asText(null);
+            String id = link.path(Operation.OPERATION_ID).asText(null);
             if (id != null && link.has("operationRef")) {
                 error("Link sets both operationId and operationRef (at " + where + ")");
             }

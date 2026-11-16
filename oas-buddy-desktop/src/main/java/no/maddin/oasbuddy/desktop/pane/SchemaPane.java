@@ -24,7 +24,9 @@ import java.util.function.Supplier;
 
 public final class SchemaPane {
 
-    static final List<String> TYPES = List.of("object", "array", "string", "integer", "number", "boolean");
+    private static final String ARRAY = "array";
+
+    static final List<String> TYPES = List.of("object", ARRAY, "string", "integer", "number", "boolean");
     /** What an array's elements or an object's additional properties can be, besides a reference. */
     private static final List<String> ELEMENT_TYPES = List.of("string", "integer", "number", "boolean");
     private static final double TYPE_COLUMN_WIDTH = 140;
@@ -117,7 +119,7 @@ public final class SchemaPane {
         constraints.node().setId("schema-constraints");
 
         Runnable showRowsForType = () -> {
-            boolean array = "array".equals(schema.getType());
+            boolean array = ARRAY.equals(schema.getType());
             setShown(array, itemsLabel, itemsBox);
             // Without a type a schema may still be an object; only a type that rules it out hides the row.
             boolean object = schema.getType() == null || "object".equals(schema.getType());
@@ -126,7 +128,7 @@ public final class SchemaPane {
         showRowsForType.run();
         typeBox.valueProperty().addListener((obs, oldVal, newVal) -> {
             schema.changeTypeTo(newVal);
-            if (!"array".equals(newVal)) {
+            if (!ARRAY.equals(newVal)) {
                 itemsBox.setValue(null);
             }
             showRowsForType.run();
@@ -267,30 +269,8 @@ public final class SchemaPane {
         /** @return the next free row */
         private int addRow(String name, Schema property, int row) {
             TypeChoice choice = TypeChoice.of(property);
-
-            ComboBox<TypeChoice> typeBox = new ComboBox<>();
-            typeBox.getItems().addAll(TypeChoice.choices(TYPES, schemaNames));
-            typeBox.setValue(choice);
-            typeBox.setPrefWidth(TYPE_COLUMN_WIDTH);
-            typeBox.valueProperty().addListener((obs, oldVal, newVal) -> {
-                if (newVal != null) {
-                    newVal.applyTo(property);
-                    refresh();
-                }
-            });
-            TextField nameField = FormFields.renameField(name, candidate -> {
-                if (schema.propertyNames().contains(candidate)) {
-                    return "A property named \"" + candidate + "\" already exists.";
-                }
-                schema.renameProperty(name, candidate);
-                if (expanded.remove(name)) {
-                    expanded.add(candidate);
-                }
-                refresh();
-                return null;
-            });
-            grid.add(nameField, 0, row);
-            grid.add(typeBox, 1, row);
+            grid.add(propertyNameField(name), 0, row);
+            grid.add(typeBox(property, choice), 1, row);
 
             if (choice != null && choice.isArray()) {
                 grid.add(elementTypeBox(property::getItems, property::createItems, schemaNames), 2, row);
@@ -298,26 +278,10 @@ public final class SchemaPane {
 
             boolean reference = choice != null && choice.isReference();
             if (!reference) {
-                TextField formatField = new TextField(property.getFormat() == null ? "" : property.getFormat());
-                formatField.setPromptText("format");
-                formatField.setMaxWidth(Double.MAX_VALUE);
-                formatField.textProperty().addListener((obs, oldVal, newVal) -> property.setFormat(newVal));
-                grid.add(formatField, 3, row);
-
+                grid.add(formatField(property), 3, row);
                 // OAS 3.0 ignores whatever sits beside a $ref, so a reference gets no details to edit.
-                ToggleButton detailsButton = new ToggleButton("Details");
-                detailsButton.setSelected(expanded.contains(name));
-                detailsButton.setOnAction(e -> {
-                    if (detailsButton.isSelected()) {
-                        expanded.add(name);
-                    } else {
-                        expanded.remove(name);
-                    }
-                    refresh();
-                });
-                grid.add(detailsButton, 4, row);
+                grid.add(detailsButton(name), 4, row);
             }
-
             Button removeButton = new Button("Remove");
             removeButton.getStyleClass().addAll(Styles.DANGER, Styles.BUTTON_OUTLINED);
             removeButton.setOnAction(e -> {
@@ -335,6 +299,56 @@ public final class SchemaPane {
                 grid.add(details, 1, row++, COLUMNS - 1, 1);
             }
             return row;
+        }
+
+        private ComboBox<TypeChoice> typeBox(Schema property, TypeChoice choice) {
+            ComboBox<TypeChoice> typeBox = new ComboBox<>();
+            typeBox.getItems().addAll(TypeChoice.choices(TYPES, schemaNames));
+            typeBox.setValue(choice);
+            typeBox.setPrefWidth(TYPE_COLUMN_WIDTH);
+            typeBox.valueProperty().addListener((obs, oldVal, newVal) -> {
+                if (newVal != null) {
+                    newVal.applyTo(property);
+                    refresh();
+                }
+            });
+            return typeBox;
+        }
+
+        private TextField propertyNameField(String name) {
+            return FormFields.renameField(name, candidate -> {
+                if (schema.propertyNames().contains(candidate)) {
+                    return "A property named \"" + candidate + "\" already exists.";
+                }
+                schema.renameProperty(name, candidate);
+                if (expanded.remove(name)) {
+                    expanded.add(candidate);
+                }
+                refresh();
+                return null;
+            });
+        }
+
+        private static TextField formatField(Schema property) {
+            TextField formatField = new TextField(property.getFormat() == null ? "" : property.getFormat());
+            formatField.setPromptText("format");
+            formatField.setMaxWidth(Double.MAX_VALUE);
+            formatField.textProperty().addListener((obs, oldVal, newVal) -> property.setFormat(newVal));
+            return formatField;
+        }
+
+        private ToggleButton detailsButton(String name) {
+            ToggleButton detailsButton = new ToggleButton("Details");
+            detailsButton.setSelected(expanded.contains(name));
+            detailsButton.setOnAction(e -> {
+                if (detailsButton.isSelected()) {
+                    expanded.add(name);
+                } else {
+                    expanded.remove(name);
+                }
+                refresh();
+            });
+            return detailsButton;
         }
     }
 }

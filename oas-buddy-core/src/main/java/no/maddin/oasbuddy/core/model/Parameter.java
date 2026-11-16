@@ -13,6 +13,10 @@ import java.util.List;
 public final class Parameter {
 
     private static final String REF = "$ref";
+    private static final String STYLE = "style";
+    private static final String ALLOW_RESERVED = "allowReserved";
+    private static final String ALLOW_EMPTY_VALUE = "allowEmptyValue";
+    private static final String EXAMPLE = "example";
 
     private final ObjectNode node;
 
@@ -59,21 +63,21 @@ public final class Parameter {
         JsonNodes.setText(node, "in", in);
         List<String> valid = ParameterStyles.validFor(in);
         if (!valid.isEmpty() && getStyle() != null && !valid.contains(getStyle())) {
-            node.remove("style");
+            node.remove(STYLE);
         }
         if (!valid.isEmpty() && !ParameterStyles.allowsReservedAndEmpty(in)) {
-            node.remove("allowReserved");
-            node.remove("allowEmptyValue");
+            node.remove(ALLOW_RESERVED);
+            node.remove(ALLOW_EMPTY_VALUE);
         }
     }
 
     /** The written {@code style}; {@code null} when absent, meaning {@link ParameterStyles#defaultFor}. */
     public String getStyle() {
-        return JsonNodes.text(node, "style");
+        return JsonNodes.text(node, STYLE);
     }
 
     public void setStyle(String style) {
-        JsonNodes.setText(node, "style", style);
+        JsonNodes.setText(node, STYLE, style);
     }
 
     /** The written {@code explode}; {@code null} when absent, meaning {@link ParameterStyles#defaultExplode}. */
@@ -87,20 +91,20 @@ public final class Parameter {
     }
 
     public boolean isAllowReserved() {
-        return Boolean.TRUE.equals(JsonNodes.bool(node, "allowReserved"));
+        return Boolean.TRUE.equals(JsonNodes.bool(node, ALLOW_RESERVED));
     }
 
     /** Only {@code true} is written; false removes the key, like the schema flags. */
     public void setAllowReserved(boolean value) {
-        JsonNodes.setBool(node, "allowReserved", value ? Boolean.TRUE : null);
+        JsonNodes.setBool(node, ALLOW_RESERVED, value ? Boolean.TRUE : null);
     }
 
     public boolean isAllowEmptyValue() {
-        return Boolean.TRUE.equals(JsonNodes.bool(node, "allowEmptyValue"));
+        return Boolean.TRUE.equals(JsonNodes.bool(node, ALLOW_EMPTY_VALUE));
     }
 
     public void setAllowEmptyValue(boolean value) {
-        JsonNodes.setBool(node, "allowEmptyValue", value ? Boolean.TRUE : null);
+        JsonNodes.setBool(node, ALLOW_EMPTY_VALUE, value ? Boolean.TRUE : null);
     }
 
     public boolean isDeprecated() {
@@ -112,15 +116,15 @@ public final class Parameter {
     }
 
     public JsonNode getExample() {
-        return node.get("example");
+        return node.get(EXAMPLE);
     }
 
     /** {@code null} removes the key. */
     public void setExample(JsonNode example) {
         if (example == null) {
-            node.remove("example");
+            node.remove(EXAMPLE);
         } else {
-            node.set("example", example);
+            node.set(EXAMPLE, example);
         }
     }
 

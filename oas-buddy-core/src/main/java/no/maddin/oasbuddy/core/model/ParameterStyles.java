@@ -14,6 +14,8 @@ import java.util.List;
  */
 public final class ParameterStyles {
 
+    private static final String SIMPLE = "simple";
+
     private ParameterStyles() {
     }
 
@@ -23,9 +25,9 @@ public final class ParameterStyles {
             return List.of();
         }
         return switch (in) {
-            case "path" -> List.of("matrix", "label", "simple");
+            case "path" -> List.of("matrix", "label", SIMPLE);
             case "query" -> List.of("form", "spaceDelimited", "pipeDelimited", "deepObject");
-            case "header" -> List.of("simple");
+            case "header" -> List.of(SIMPLE);
             case "cookie" -> List.of("form");
             default -> List.of();
         };
@@ -37,7 +39,7 @@ public final class ParameterStyles {
         if (valid.isEmpty()) {
             return null;
         }
-        return "path".equals(in) || "header".equals(in) ? "simple" : "form";
+        return "path".equals(in) || "header".equals(in) ? SIMPLE : "form";
     }
 
     /** What an absent {@code explode} means for a style: {@code true} only for {@code form}. */

@@ -9,6 +9,9 @@ import java.util.List;
 
 public final class Operation {
 
+    public static final String OPERATION_ID = "operationId";
+    public static final String RESPONSES = "responses";
+
     private final ObjectNode node;
 
     public Operation(ObjectNode node) {
@@ -47,11 +50,11 @@ public final class Operation {
     }
 
     public String getOperationId() {
-        return JsonNodes.text(node, "operationId");
+        return JsonNodes.text(node, OPERATION_ID);
     }
 
     public void setOperationId(String operationId) {
-        JsonNodes.setText(node, "operationId", operationId);
+        JsonNodes.setText(node, OPERATION_ID, operationId);
     }
 
     public String getSummary() {
@@ -109,6 +112,6 @@ public final class Operation {
     }
 
     public Responses getResponses() {
-        return new Responses(JsonNodes.objectChild(node, "responses"));
+        return new Responses(JsonNodes.objectChild(node, RESPONSES));
     }
 }

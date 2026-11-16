@@ -45,10 +45,12 @@ class LoggingProviderTest {
 
             @Override
             public void flush() {
+                // nothing buffered: publish() stores each record immediately
             }
 
             @Override
             public void close() {
+                // no resources to release
             }
         };
         collector.setLevel(Level.ALL);
