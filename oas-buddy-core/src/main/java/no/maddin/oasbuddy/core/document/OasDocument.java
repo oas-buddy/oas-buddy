@@ -19,7 +19,7 @@ import no.maddin.oasbuddy.core.model.Tags;
 public final class OasDocument {
 
     private final ObjectNode root;
-    private final DocumentFormat format;
+    private DocumentFormat format;
 
     private OasDocument(ObjectNode root, DocumentFormat format) {
         this.root = root;
@@ -46,6 +46,16 @@ public final class OasDocument {
 
     public DocumentFormat getFormat() {
         return format;
+    }
+
+    /**
+     * The serialization this document is written in. It is set from the file extension on read, and
+     * again by {@link DocumentWriter#write(OasDocument, java.nio.file.Path)} when the target path
+     * names a format — so saving a JSON document as {@code .yaml} converts it, and every later save
+     * to that file keeps writing YAML.
+     */
+    public void setFormat(DocumentFormat format) {
+        this.format = format;
     }
 
     public String getOpenApiVersion() {

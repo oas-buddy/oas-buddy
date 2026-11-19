@@ -38,6 +38,30 @@ class DocumentRoundTripTest {
     }
 
     @Test
+    void aJsonDocumentSavedAsYamlKeepsItsKeyOrderAndValues() throws IOException {
+        assertConvertsTo("petstore.json", DocumentFormat.JSON, DocumentFormat.YAML);
+    }
+
+    @Test
+    void aYamlDocumentSavedAsJsonKeepsItsKeyOrderAndValues() throws IOException {
+        assertConvertsTo("petstore.yaml", DocumentFormat.YAML, DocumentFormat.JSON);
+    }
+
+    // Converting to YAML is where unquoted output could bite, so these two cover the keys and
+    // values least likely to survive it: path keys beginning with a slash and carrying braces
+    // ("/pets/{petId}"), numeric status codes, an oauth2 scope name containing a colon
+    // ("read:pets"), and a value that is markup ("<pets/>").
+    @Test
+    void reusableComponentsSurviveAConversionToYaml() throws IOException {
+        assertConvertsTo("reusable.json", DocumentFormat.JSON, DocumentFormat.YAML);
+    }
+
+    @Test
+    void securitySchemesSurviveAConversionToYaml() throws IOException {
+        assertConvertsTo("secured.json", DocumentFormat.JSON, DocumentFormat.YAML);
+    }
+
+    @Test
     void securitySchemesRoundTripInYaml() throws IOException {
         assertRoundTrips("secured.yaml", DocumentFormat.YAML);
     }
@@ -355,6 +379,23 @@ class DocumentRoundTripTest {
             }
         }
         return changed;
+    }
+
+    /**
+     * Converting between the two formats must lose nothing: the key order and every value survive
+     * a JSON document being saved as YAML, and the other way round. This is what "Save As petstore
+     * .yaml" on a document loaded from JSON actually does.
+     */
+    private static void assertConvertsTo(String fixture, DocumentFormat from, DocumentFormat to)
+            throws IOException {
+        OasDocument original = loadFixture(fixture, from);
+        List<String> orderBefore = fieldOrder(original.getRoot());
+
+        original.setFormat(to);
+        OasDocument converted = DocumentReader.read(DocumentWriter.write(original), to);
+
+        assertEquals(orderBefore, fieldOrder(converted.getRoot()));
+        assertEquals(original.getRoot(), converted.getRoot());
     }
 
     private static void assertRoundTrips(String fixture, DocumentFormat format) throws IOException {

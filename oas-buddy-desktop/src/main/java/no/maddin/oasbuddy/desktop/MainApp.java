@@ -260,12 +260,22 @@ public class MainApp extends Application {
         writeToFile(currentFile);
     }
 
+    /**
+     * The filters are split per format, unlike Open's single combined one: the chosen file name is
+     * what decides the format written (see {@code DocumentWriter.write(OasDocument, Path)}), so the
+     * dialog has to offer the extensions apart rather than lump them together. The document's
+     * current format is preselected, which is also what makes the platform append the right
+     * extension to a name typed without one.
+     */
     private void saveAs() {
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Save OpenAPI document");
+        var yamlFilter = new FileChooser.ExtensionFilter("YAML files", "*.yaml", "*.yml");
+        var jsonFilter = new FileChooser.ExtensionFilter("JSON files", "*.json");
         chooser.getExtensionFilters().addAll(
-                new FileChooser.ExtensionFilter("OpenAPI files", "*.yaml", "*.yml", "*.json"),
-                new FileChooser.ExtensionFilter("All files", "*.*"));
+                yamlFilter, jsonFilter, new FileChooser.ExtensionFilter("All files", "*.*"));
+        chooser.setSelectedExtensionFilter(
+                document.getFormat() == DocumentFormat.JSON ? jsonFilter : yamlFilter);
         var file = chooser.showSaveDialog(stage);
         if (file == null) {
             return;
