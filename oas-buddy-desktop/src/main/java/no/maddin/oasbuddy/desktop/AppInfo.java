@@ -53,7 +53,7 @@ public record AppInfo(String name, String version, String description, String ur
     public static AppInfo load() {
         try (InputStream in = AppInfo.class.getResourceAsStream(RESOURCE)) {
             return read(in);
-        } catch (IOException e) {
+        } catch (IOException _) {
             return read(null);
         }
     }

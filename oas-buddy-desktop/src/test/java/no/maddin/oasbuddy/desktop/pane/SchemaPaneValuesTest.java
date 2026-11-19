@@ -24,6 +24,7 @@ import org.testfx.service.query.NodeQuery;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -185,7 +186,7 @@ class SchemaPaneValuesTest extends ApplicationTest {
         ComboBox<TypeChoice> type = (ComboBox<TypeChoice>) cell("age", TYPE_COLUMN);
         interact(() -> type.setValue(TypeChoice.type("number")));
 
-        assertTrue(detailsOf("age") != null, "the details folded on a type change");
+        assertNotNull(detailsOf("age"), "the details folded on a type change");
     }
 
     @Test

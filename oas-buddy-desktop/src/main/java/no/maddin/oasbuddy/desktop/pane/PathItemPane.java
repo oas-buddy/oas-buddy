@@ -20,7 +20,7 @@ import javafx.scene.layout.VBox;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 
 public final class PathItemPane {
@@ -42,14 +42,14 @@ public final class PathItemPane {
      *                            one only reports the request, it never removes anything itself
      */
     public static Node build(OasDocument document, String path, Runnable onStructureChanged,
-                             BiFunction<String, String, Boolean> onRenamePath,
+                             BiPredicate<String, String> onRenamePath,
                              RemovalConfirmation confirmation, Runnable onRemovePath, Consumer<HttpMethod> onRemoveOperation) {
         PathItem pathItem = document.getPaths().getPathItem(path);
 
         TextField nameField = FormFields.renameField(path, candidate ->
                 document.getPaths().pathNames().contains(candidate)
                         ? "A path named \"" + candidate + "\" already exists."
-                        : onRenamePath.apply(path, candidate) ? null : "");
+                        : onRenamePath.test(path, candidate) ? null : "");
         nameField.setId("path-name");
         if (pathItem == null) {
             return FormFields.root(

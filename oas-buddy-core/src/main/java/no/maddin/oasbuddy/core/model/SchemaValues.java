@@ -49,7 +49,7 @@ public final class SchemaValues {
         try {
             JsonNode node = JSON.readTree(text);
             return node == null || node.isMissingNode() ? null : node;
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException _) {
             return null;
         }
     }
