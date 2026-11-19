@@ -131,47 +131,55 @@ final class ServersEditor {
 
         for (String name : variables.names()) {
             ServerVariable variable = variables.get(name);
-            if (variable == null) {
-                Label note = FormFields.notAnObject();
-                box.getChildren().add(new HBox(8, new Label(name), note, removeVariable(variables, name, onChanged)));
-                continue;
-            }
-            TextField nameField = FormFields.renameField(name, candidate ->
-                    variables.names().contains(candidate)
-                            ? "A variable named \"" + candidate + "\" already exists."
-                            : variables.rename(name, candidate) ? null : "");
-            nameField.getStyleClass().add(VARIABLE_NAME_CLASS);
-            nameField.setPrefColumnCount(10);
-            nameField.focusedProperty().addListener((obs, was, is) -> {
-                if (!is) {
-                    onChanged.run();
-                }
-            });
-
-            TextField defaultField = new TextField(nullToEmpty(variable.getDefault()));
-            defaultField.getStyleClass().add(VARIABLE_DEFAULT_CLASS);
-            defaultField.setPromptText("default");
-            defaultField.setPrefColumnCount(10);
-            defaultField.textProperty().addListener((obs, oldVal, newVal) -> variable.setDefault(newVal));
-
-            TextField enumField = new TextField(String.join(", ", variable.getEnum()));
-            enumField.getStyleClass().add(VARIABLE_ENUM_CLASS);
-            enumField.setPromptText("allowed values, comma separated");
-            enumField.textProperty().addListener((obs, oldVal, newVal) -> variable.setEnum(
-                    newVal == null || newVal.isBlank() ? List.of()
-                            : Arrays.stream(newVal.split("\\s*,\\s*")).filter(v -> !v.isEmpty()).toList()));
-            HBox.setHgrow(enumField, Priority.ALWAYS);
-
-            TextField descriptionField = FormFields.boundTextField(variable.getDescription(), "description", null,
-                    variable::setDescription);
-            HBox.setHgrow(descriptionField, Priority.ALWAYS);
-
-            HBox row = new HBox(8, nameField, defaultField, enumField, descriptionField,
-                    removeVariable(variables, name, onChanged));
-            row.setAlignment(Pos.CENTER_LEFT);
-            box.getChildren().add(row);
+            box.getChildren().add(variable == null
+                    ? new HBox(8, new Label(name), FormFields.notAnObject(), removeVariable(variables, name, onChanged))
+                    : variableRow(variables, name, variable, onChanged));
         }
+        box.getChildren().add(addVariableRow(variables, onChanged));
+    }
 
+    private static HBox variableRow(ServerVariables variables, String name, ServerVariable variable,
+                                    Runnable onChanged) {
+        TextField nameField = FormFields.renameField(name, candidate ->
+                variables.names().contains(candidate)
+                        ? "A variable named \"" + candidate + "\" already exists."
+                        : variables.rename(name, candidate) ? null : "");
+        nameField.getStyleClass().add(VARIABLE_NAME_CLASS);
+        nameField.setPrefColumnCount(10);
+        nameField.focusedProperty().addListener((obs, was, is) -> {
+            if (!is) {
+                onChanged.run();
+            }
+        });
+
+        TextField defaultField = new TextField(nullToEmpty(variable.getDefault()));
+        defaultField.getStyleClass().add(VARIABLE_DEFAULT_CLASS);
+        defaultField.setPromptText("default");
+        defaultField.setPrefColumnCount(10);
+        defaultField.textProperty().addListener((obs, oldVal, newVal) -> variable.setDefault(newVal));
+
+        TextField enumField = new TextField(String.join(", ", variable.getEnum()));
+        enumField.getStyleClass().add(VARIABLE_ENUM_CLASS);
+        enumField.setPromptText("allowed values, comma separated");
+        enumField.textProperty().addListener((obs, oldVal, newVal) -> variable.setEnum(splitValues(newVal)));
+        HBox.setHgrow(enumField, Priority.ALWAYS);
+
+        TextField descriptionField = FormFields.boundTextField(variable.getDescription(), "description", null,
+                variable::setDescription);
+        HBox.setHgrow(descriptionField, Priority.ALWAYS);
+
+        HBox row = new HBox(8, nameField, defaultField, enumField, descriptionField,
+                removeVariable(variables, name, onChanged));
+        row.setAlignment(Pos.CENTER_LEFT);
+        return row;
+    }
+
+    private static List<String> splitValues(String text) {
+        return text == null || text.isBlank() ? List.of()
+                : Arrays.stream(text.split("\\s*,\\s*")).filter(v -> !v.isEmpty()).toList();
+    }
+
+    private static HBox addVariableRow(ServerVariables variables, Runnable onChanged) {
         TextField newName = new TextField();
         newName.setPromptText("variable name");
         Button add = new Button("Add variable");
@@ -187,7 +195,7 @@ final class ServersEditor {
         newName.setOnAction(e -> addVariable.run());
         HBox addRow = new HBox(8, newName, add);
         addRow.setAlignment(Pos.CENTER_LEFT);
-        box.getChildren().add(addRow);
+        return addRow;
     }
 
     private static Button removeVariable(ServerVariables variables, String name, Runnable onChanged) {

@@ -87,6 +87,10 @@ public class MainApp extends Application {
     private static final String THEME_PREF_KEY = "theme";
     private static final String THEME_DARK = "dark";
     private static final String THEME_LIGHT = "light";
+    private static final String APP_NAME = "OAS Buddy";
+    /** Outline labels, also the keys {@link #refreshAndSelect} finds a node by. */
+    private static final String SCHEMAS = "Schemas";
+    private static final String PATHS = "Paths";
 
     private final OasValidator validator = new OasValidator();
 
@@ -156,7 +160,7 @@ public class MainApp extends Application {
 
         refreshOutline();
 
-        stage.setTitle("OAS Buddy");
+        stage.setTitle(APP_NAME);
         stage.getIcons().addAll(AppIcon.icons(16, 32, 48, 64, 128, 256));
         stage.setScene(new Scene(root, 1100, 750));
         stage.show();
@@ -326,7 +330,7 @@ public class MainApp extends Application {
                 "Tags", () -> TagsPane.build(document, this::refreshOutline, this::removeTag))));
 
         TreeItem<OutlineNode> pathsItem = new TreeItem<>(new OutlineNode(
-                "Paths", () -> PathsPane.build(document, this::refreshOutline, this::removePath)));
+                PATHS, () -> PathsPane.build(document, this::refreshOutline, this::removePath)));
         pathsItem.setExpanded(true);
         for (String path : document.getPaths().pathNames()) {
             PathItem pathItem = document.getPaths().getPathItem(path);
@@ -349,7 +353,7 @@ public class MainApp extends Application {
         }
         root.getChildren().add(pathsItem);
 
-        root.getChildren().add(section("Schemas",
+        root.getChildren().add(section(SCHEMAS,
                 () -> SchemasPane.build(document, this::refreshOutline, this::removeSchema),
                 document.getComponents().getSchemas().names(),
                 name -> SchemaPane.build(document, name, this::renameSchema, this::removeSchema)));
@@ -405,7 +409,7 @@ public class MainApp extends Application {
 
     private void removeSchema(String schemaName) {
         SchemaRemoval.remove(document, schemaName, confirmation,
-                () -> refreshAndSelect("Schemas"));
+                () -> refreshAndSelect(SCHEMAS));
     }
 
     private void removeTag(String tagName) {
@@ -416,12 +420,12 @@ public class MainApp extends Application {
     /** Selects the renamed schema afterwards, so the editor stays on what the user was editing. */
     private boolean renameSchema(String from, String to) {
         return SchemaRename.rename(document, from, to, renameConfirmation,
-                () -> refreshAndSelect("Schemas", to));
+                () -> refreshAndSelect(SCHEMAS, to));
     }
 
     /** Selects the renamed path afterwards, so the editor stays on what the user was editing. */
     private boolean renamePath(String from, String to) {
-        return PathRename.rename(document, from, to, () -> refreshAndSelect("Paths", to));
+        return PathRename.rename(document, from, to, () -> refreshAndSelect(PATHS, to));
     }
 
     private void removeSecurityScheme(String schemeName) {
@@ -431,12 +435,12 @@ public class MainApp extends Application {
 
     private void removePath(String path) {
         PathRemoval.removePath(document, path, confirmation,
-                () -> refreshAndSelect("Paths"));
+                () -> refreshAndSelect(PATHS));
     }
 
     private void removeOperation(String path, HttpMethod method) {
         PathRemoval.removeOperation(document, path, method, confirmation,
-                () -> refreshAndSelect("Paths", path));
+                () -> refreshAndSelect(PATHS, path));
     }
 
     /**
@@ -460,12 +464,12 @@ public class MainApp extends Application {
 
     private String titleOrDefault() {
         String title = document.getInfo().getTitle();
-        return title == null || title.isBlank() ? "OAS Buddy" : title;
+        return title == null || title.isBlank() ? APP_NAME : title;
     }
 
     private void showError(String header, String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
-        alert.setTitle("OAS Buddy");
+        alert.setTitle(APP_NAME);
         alert.setHeaderText(header);
         alert.setContentText(message);
         alert.showAndWait();

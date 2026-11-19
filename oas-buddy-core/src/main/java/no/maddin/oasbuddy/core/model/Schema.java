@@ -22,6 +22,8 @@ public final class Schema {
     private static final String ENUM = "enum";
     private static final String DEFAULT = "default";
     private static final String EXAMPLE = "example";
+    private static final String PROPERTIES = "properties";
+    private static final String REQUIRED = "required";
 
     private final ObjectNode node;
 
@@ -212,7 +214,7 @@ public final class Schema {
 
     public List<String> getRequired() {
         List<String> required = new ArrayList<>();
-        var existing = node.get("required");
+        var existing = node.get(REQUIRED);
         if (existing instanceof ArrayNode arrayNode) {
             for (var element : arrayNode) {
                 required.add(element.asText());
@@ -222,7 +224,7 @@ public final class Schema {
     }
 
     public void setRequired(List<String> required) {
-        ArrayNode array = JsonNodes.arrayChild(node, "required");
+        ArrayNode array = JsonNodes.arrayChild(node, REQUIRED);
         array.removeAll();
         for (String name : required) {
             array.add(name);
@@ -230,11 +232,11 @@ public final class Schema {
     }
 
     public List<String> propertyNames() {
-        return JsonNodes.fieldNames(node.get("properties"));
+        return JsonNodes.fieldNames(node.get(PROPERTIES));
     }
 
     public Schema getProperty(String name) {
-        var properties = node.get("properties");
+        var properties = node.get(PROPERTIES);
         if (!(properties instanceof ObjectNode objectNode)) {
             return null;
         }
@@ -243,12 +245,12 @@ public final class Schema {
     }
 
     public Schema addProperty(String name) {
-        ObjectNode properties = JsonNodes.objectChild(node, "properties");
+        ObjectNode properties = JsonNodes.objectChild(node, PROPERTIES);
         return new Schema(JsonNodes.objectChild(properties, name));
     }
 
     public void removeProperty(String name) {
-        var properties = node.get("properties");
+        var properties = node.get(PROPERTIES);
         if (properties instanceof ObjectNode objectNode) {
             objectNode.remove(name);
         }
@@ -262,11 +264,11 @@ public final class Schema {
      *         already taken (a collision is refused, never silently overwritten)
      */
     public boolean renameProperty(String from, String to) {
-        var properties = node.get("properties");
+        var properties = node.get(PROPERTIES);
         if (!(properties instanceof ObjectNode objectNode) || !JsonNodes.renameField(objectNode, from, to)) {
             return false;
         }
-        if (node.get("required") instanceof ArrayNode required) {
+        if (node.get(REQUIRED) instanceof ArrayNode required) {
             for (int i = 0; i < required.size(); i++) {
                 if (from.equals(required.get(i).asText())) {
                     required.set(i, TextNode.valueOf(to));

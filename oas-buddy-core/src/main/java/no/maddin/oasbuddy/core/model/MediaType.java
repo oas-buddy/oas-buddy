@@ -12,6 +12,7 @@ import no.maddin.oasbuddy.core.document.JsonNodes;
 public final class MediaType {
 
     private static final String EXAMPLE = "example";
+    private static final String SCHEMA = "schema";
 
     private final ObjectNode node;
 
@@ -21,16 +22,16 @@ public final class MediaType {
 
     /** The schema, creating it if absent. */
     public Schema getSchema() {
-        return new Schema(JsonNodes.objectChild(node, "schema"));
+        return new Schema(JsonNodes.objectChild(node, SCHEMA));
     }
 
     /** The schema if there is one, otherwise {@code null}. Reads only. */
     public Schema findSchema() {
-        return JsonNodes.wrap(node.get("schema"), Schema::new);
+        return JsonNodes.wrap(node.get(SCHEMA), Schema::new);
     }
 
     public void removeSchema() {
-        node.remove("schema");
+        node.remove(SCHEMA);
     }
 
     public JsonNode getExample() {

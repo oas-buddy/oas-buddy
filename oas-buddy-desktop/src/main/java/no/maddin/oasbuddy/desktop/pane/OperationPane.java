@@ -26,6 +26,10 @@ import java.util.function.Supplier;
 
 public final class OperationPane {
 
+    private static final String INHERIT_MODE = "inherit";
+    private static final String PUBLIC_MODE = "public";
+    private static final String REQUIRE_MODE = "require";
+
     private OperationPane() {
     }
 
@@ -117,8 +121,8 @@ public final class OperationPane {
      */
     private static void buildSecurity(Operation operation, VBox box, SecuritySchemeCatalog catalog) {
         SecurityRequirements security = operation.getSecurity();
-        String mode = !security.isDeclared() ? "inherit"
-                : security.requirements().isEmpty() ? "public" : "require";
+        String mode = !security.isDeclared() ? INHERIT_MODE
+                : security.requirements().isEmpty() ? PUBLIC_MODE : REQUIRE_MODE;
         buildSecurity(operation, box, catalog, mode);
     }
 
@@ -129,23 +133,23 @@ public final class OperationPane {
 
         ToggleGroup group = new ToggleGroup();
         HBox choices = new HBox(12,
-                modeRadio(group, "inherit", "Inherit document default", mode,
+                modeRadio(group, INHERIT_MODE, "Inherit document default", mode,
                         () -> security.undeclare(), operation, box, catalog),
-                modeRadio(group, "public", "Public (no security)", mode,
+                modeRadio(group, PUBLIC_MODE, "Public (no security)", mode,
                         security::declarePublic, operation, box, catalog),
-                modeRadio(group, "require", "Require", mode,
+                modeRadio(group, REQUIRE_MODE, "Require", mode,
                         () -> { }, operation, box, catalog));
         choices.setAlignment(Pos.CENTER_LEFT);
         box.getChildren().add(choices);
 
-        if ("require".equals(mode)) {
+        if (REQUIRE_MODE.equals(mode)) {
             // "Require" with nothing listed is an empty array, which is what public looks like; the
             // array is declared here so adding the first requirement has somewhere to go.
             if (!security.isDeclared()) {
                 security.declarePublic();
             }
             box.getChildren().add(SecurityRequirementsPane.build(security, catalog,
-                    () -> buildSecurity(operation, box, catalog, "require")));
+                    () -> buildSecurity(operation, box, catalog, REQUIRE_MODE)));
         }
     }
 

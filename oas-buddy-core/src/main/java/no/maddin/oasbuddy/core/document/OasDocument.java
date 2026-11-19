@@ -18,6 +18,10 @@ import no.maddin.oasbuddy.core.model.Tags;
  */
 public final class OasDocument {
 
+    public static final String PATHS = "paths";
+    public static final String COMPONENTS = "components";
+    private static final String OPENAPI = "openapi";
+
     private final ObjectNode root;
     private DocumentFormat format;
 
@@ -32,11 +36,11 @@ public final class OasDocument {
 
     public static OasDocument newDocument(DocumentFormat format) {
         ObjectNode root = JsonNodeFactory.instance.objectNode();
-        root.put("openapi", "3.0.3");
+        root.put(OPENAPI, "3.0.3");
         ObjectNode info = JsonNodes.objectChild(root, "info");
         info.put("title", "New API");
         info.put("version", "0.1.0");
-        JsonNodes.objectChild(root, "paths");
+        JsonNodes.objectChild(root, PATHS);
         return new OasDocument(root, format);
     }
 
@@ -59,11 +63,11 @@ public final class OasDocument {
     }
 
     public String getOpenApiVersion() {
-        return JsonNodes.text(root, "openapi");
+        return JsonNodes.text(root, OPENAPI);
     }
 
     public void setOpenApiVersion(String version) {
-        JsonNodes.setText(root, "openapi", version);
+        JsonNodes.setText(root, OPENAPI, version);
     }
 
     public Info getInfo() {
@@ -85,7 +89,7 @@ public final class OasDocument {
     }
 
     public Paths getPaths() {
-        return new Paths(JsonNodes.objectChild(root, "paths"));
+        return new Paths(JsonNodes.objectChild(root, PATHS));
     }
 
     /** The root {@code tags} array: the tags this document defines. See {@link Tags}. */
@@ -98,6 +102,6 @@ public final class OasDocument {
      * actually written to it. See {@link LazyObjectNode}.
      */
     public Components getComponents() {
-        return new Components(LazyObjectNode.of(root, "components"));
+        return new Components(LazyObjectNode.of(root, COMPONENTS));
     }
 }
