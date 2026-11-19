@@ -136,7 +136,7 @@ public final class OAuthFlowsPane {
             empty.getStyleClass().add(Styles.TEXT_MUTED);
             grid.add(empty, 0, 0, 3, 1);
         } else {
-            grid.addRow(0, FormFields.columnHeading("Scope"), FormFields.columnHeading("Description"));
+            grid.addRow(0, FormFields.columnHeading("Scope"), FormFields.columnHeading(FormFields.DESCRIPTION));
             int row = 1;
             for (int index = 0; index < names.size(); index++) {
                 grid.addRow(row++, scopeRow(flowName, flow, names.get(index), index, onChanged));

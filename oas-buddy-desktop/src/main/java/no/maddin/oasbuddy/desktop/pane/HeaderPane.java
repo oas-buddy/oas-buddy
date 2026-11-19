@@ -24,7 +24,7 @@ public final class HeaderPane {
             GridPane grid = FormFields.grid();
             TextField description = HeaderForm.descriptionField(header);
             description.setId("header-description");
-            grid.addRow(0, new Label("Description"), description);
+            grid.addRow(0, new Label(FormFields.DESCRIPTION), description);
             TextField type = HeaderForm.typeField(header);
             type.setId("header-type");
             grid.addRow(1, new Label("Type"), type);

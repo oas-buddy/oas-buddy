@@ -17,7 +17,7 @@ import no.maddin.oasbuddy.core.model.Parameter;
 public final class ComponentKinds {
 
     public static final ComponentKind<ApiResponse> RESPONSES = new ComponentKind<>(
-            "response", "a", "add-response", "NotFound", "Description", ComponentResponses.SECTION,
+            "response", "a", "add-response", "NotFound", FormFields.DESCRIPTION, ComponentResponses.SECTION,
             c -> c.getResponses(), r -> orEmpty(r.getDescription()),
             // description is the one field a response must have
             (response, key) -> response.setDescription(""));
@@ -36,11 +36,11 @@ public final class ComponentKinds {
             c -> c.getExamples(), e -> orEmpty(e.getSummary()), (example, key) -> { });
 
     public static final ComponentKind<Header> HEADERS = new ComponentKind<>(
-            "header", "a", "add-component-header", "X-Rate-Limit", "Description", ComponentHeaders.SECTION,
+            "header", "a", "add-component-header", "X-Rate-Limit", FormFields.DESCRIPTION, ComponentHeaders.SECTION,
             c -> c.getHeaders(), h -> orEmpty(h.getDescription()), (header, key) -> { });
 
     public static final ComponentKind<Link> LINKS = new ComponentKind<>(
-            "link", "a", "add-component-link", "GetPet", "Description", ComponentLinks.SECTION,
+            "link", "a", "add-component-link", "GetPet", FormFields.DESCRIPTION, ComponentLinks.SECTION,
             c -> c.getLinks(), l -> orEmpty(l.getDescription()), (link, key) -> { });
 
     public static final ComponentKind<Callback> CALLBACKS = new ComponentKind<>(

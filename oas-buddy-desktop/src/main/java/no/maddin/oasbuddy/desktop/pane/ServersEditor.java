@@ -75,7 +75,7 @@ final class ServersEditor {
         HBox.setHgrow(urlField, Priority.SOMETIMES);
 
         TextField descriptionField = new TextField(nullToEmpty(server.getDescription()));
-        descriptionField.setPromptText("Description");
+        descriptionField.setPromptText(FormFields.DESCRIPTION);
         descriptionField.textProperty().addListener((obs, oldVal, newVal) -> server.setDescription(newVal));
         HBox.setHgrow(descriptionField, Priority.ALWAYS);
 
@@ -83,7 +83,7 @@ final class ServersEditor {
         removeButton.getStyleClass().addAll(Styles.DANGER, Styles.BUTTON_OUTLINED);
         removeButton.setOnAction(e -> onRemove.run());
 
-        HBox row = new HBox(8, new Label("URL"), urlField, new Label("Description"), descriptionField, removeButton);
+        HBox row = new HBox(8, new Label("URL"), urlField, new Label(FormFields.DESCRIPTION), descriptionField, removeButton);
         row.setAlignment(Pos.CENTER_LEFT);
 
         VBox variablesBox = new VBox(6);

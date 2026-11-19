@@ -143,7 +143,7 @@ public final class PathItemPane {
         GridPane grid = FormFields.grid();
         int row = 0;
         FormFields.textRow(grid, row++, "Summary", pathItem::getSummary, pathItem::setSummary);
-        FormFields.textAreaRow(grid, row, "Description", pathItem::getDescription, pathItem::setDescription);
+        FormFields.textAreaRow(grid, row, FormFields.DESCRIPTION, pathItem::getDescription, pathItem::setDescription);
 
         // declared once here, these apply to every operation on the path
         VBox parameters = ParametersEditor.build(pathItem.getParameters(), catalog,

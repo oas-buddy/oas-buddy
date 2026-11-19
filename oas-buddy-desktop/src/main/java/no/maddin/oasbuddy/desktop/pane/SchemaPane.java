@@ -103,7 +103,7 @@ public final class SchemaPane {
         grid.addRow(row++, itemsLabel, itemsBox);
 
         FormFields.textRow(grid, row++, "Format", schema::getFormat, schema::setFormat);
-        FormFields.textAreaRow(grid, row++, "Description", schema::getDescription, schema::setDescription);
+        FormFields.textAreaRow(grid, row++, FormFields.DESCRIPTION, schema::getDescription, schema::setDescription);
         FormFields.textRow(grid, row++,
                 "Required properties (comma separated)",
                 () -> String.join(", ", schema.getRequired()),

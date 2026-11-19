@@ -50,7 +50,7 @@ public final class OperationPane {
         int row = 0;
         FormFields.textRow(grid, row++, "Operation ID", operation::getOperationId, operation::setOperationId);
         FormFields.textRow(grid, row++, "Summary", operation::getSummary, operation::setSummary);
-        FormFields.textAreaRow(grid, row++, "Description", operation::getDescription, operation::setDescription);
+        FormFields.textAreaRow(grid, row++, FormFields.DESCRIPTION, operation::getDescription, operation::setDescription);
         FormFields.checkBoxRow(grid, row, "Deprecated", operation::isDeprecated, operation::setDeprecated)
                 .getStyleClass().add("operation-deprecated");
 
@@ -285,7 +285,7 @@ public final class OperationPane {
 
         HBox row = new HBox(8,
                 requiredBox,
-                new Label("Description"), descriptionField);
+                new Label(FormFields.DESCRIPTION), descriptionField);
         row.setAlignment(Pos.CENTER_LEFT);
 
         VBox content = ContentEditor.build(existing.getContent(), schemaNames, components, confirmation);
@@ -328,7 +328,7 @@ public final class OperationPane {
                 row.getChildren().add(sourcePicker(responses, statusCode, response, responseCatalog,
                         confirmation, refresh));
                 if (!response.isReference()) {
-                    row.getChildren().addAll(new Label("Description"), ResponseForm.descriptionField(response));
+                    row.getChildren().addAll(new Label(FormFields.DESCRIPTION), ResponseForm.descriptionField(response));
                     card.getChildren().add(
                             ContentEditor.build(response.getContent(), schemaNames, responseCatalog, confirmation));
                     Label headersTitle = new Label("Headers");

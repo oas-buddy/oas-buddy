@@ -30,7 +30,7 @@ public final class ExamplePane {
             TextField summary = ExampleForm.summaryField(example);
             summary.setId("example-summary");
             grid.addRow(row++, new Label("Summary"), summary);
-            FormFields.textAreaRow(grid, row++, "Description", example::getDescription, example::setDescription);
+            FormFields.textAreaRow(grid, row++, FormFields.DESCRIPTION, example::getDescription, example::setDescription);
             TextArea value = ExampleForm.valueArea(example, () -> null);
             value.setId("example-value");
             value.setPrefRowCount(6);

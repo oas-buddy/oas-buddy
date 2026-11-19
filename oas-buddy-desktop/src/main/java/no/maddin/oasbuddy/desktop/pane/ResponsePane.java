@@ -27,7 +27,7 @@ public final class ResponsePane {
             GridPane grid = FormFields.grid();
             TextField description = ResponseForm.descriptionField(response);
             description.setId("response-description");
-            grid.addRow(0, new Label("Description"), description);
+            grid.addRow(0, new Label(FormFields.DESCRIPTION), description);
 
             ComponentCatalog catalog = ComponentCatalog.of(document);
             return List.of(grid,

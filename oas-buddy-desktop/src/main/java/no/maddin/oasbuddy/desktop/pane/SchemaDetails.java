@@ -49,7 +49,7 @@ final class SchemaDetails {
         int row = 0;
         if (withTitleAndDescription) {
             FormFields.textRow(grid, row++, "Title", schema::getTitle, schema::setTitle);
-            FormFields.textAreaRow(grid, row++, "Description", schema::getDescription, schema::setDescription);
+            FormFields.textAreaRow(grid, row++, FormFields.DESCRIPTION, schema::getDescription, schema::setDescription);
         }
         valueRow(grid, row++, "Default", DEFAULT, schema, schema::getDefault, schema::setDefault);
         valueRow(grid, row++, "Example", EXAMPLE, schema, schema::getExample, schema::setExample);

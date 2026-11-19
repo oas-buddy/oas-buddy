@@ -30,7 +30,7 @@ public final class ParameterPane {
             grid.addRow(row++, new Label("In"), ParameterForm.inBox(parameter, serialization::refresh));
             grid.addRow(row++, new Label(""), ParameterForm.requiredBox(parameter));
             grid.addRow(row++, new Label("Type"), ParameterForm.typeControl(parameter));
-            FormFields.textAreaRow(grid, row, "Description", parameter::getDescription, parameter::setDescription);
+            FormFields.textAreaRow(grid, row, FormFields.DESCRIPTION, parameter::getDescription, parameter::setDescription);
             return List.of(grid, serialization.node());
         });
     }

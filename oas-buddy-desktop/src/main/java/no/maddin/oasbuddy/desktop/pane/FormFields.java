@@ -26,6 +26,9 @@ import java.util.function.Supplier;
 
 final class FormFields {
 
+    /** The label every editor gives an OAS {@code description} field. */
+    static final String DESCRIPTION = "Description";
+
     private FormFields() {
     }
 
