@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -90,7 +91,7 @@ class ParametersTest {
         parameters.remove(second);
 
         assertEquals(1, parameters.all().size());
-        assertTrue(parameters.all().getFirst().node() == first.node(), "the first entry must survive");
+        assertSame(first.node(), parameters.all().getFirst().node(), "the first entry must survive");
     }
 
     @Test

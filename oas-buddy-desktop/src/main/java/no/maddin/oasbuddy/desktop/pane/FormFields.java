@@ -20,9 +20,10 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 import java.util.function.BiPredicate;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.function.UnaryOperator;
 
 final class FormFields {
 
@@ -149,9 +150,9 @@ final class FormFields {
         return area;
     }
 
-    static CheckBox checkBoxRow(GridPane grid, int row, String label, Supplier<Boolean> getter, Consumer<Boolean> setter) {
+    static CheckBox checkBoxRow(GridPane grid, int row, String label, BooleanSupplier getter, Consumer<Boolean> setter) {
         CheckBox box = new CheckBox();
-        box.setSelected(Boolean.TRUE.equals(getter.get()));
+        box.setSelected(getter.getAsBoolean());
         box.selectedProperty().addListener((obs, oldVal, newVal) -> setter.accept(newVal));
         grid.addRow(row, new Label(label), box);
         return box;
@@ -168,7 +169,7 @@ final class FormFields {
      * A blank value reverts quietly — for a rename declined through its own confirmation dialog,
      * which already explained itself.
      */
-    static TextField renameField(String initialName, Function<String, String> attempt) {
+    static TextField renameField(String initialName, UnaryOperator<String> attempt) {
         TextField field = new TextField(initialName);
         Runnable commit = () -> {
             String candidate = field.getText() == null ? "" : field.getText().strip();

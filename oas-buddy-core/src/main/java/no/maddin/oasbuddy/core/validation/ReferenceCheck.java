@@ -89,7 +89,7 @@ final class ReferenceCheck {
         try {
             String pointer = URLDecoder.decode(ref.substring(1), StandardCharsets.UTF_8);
             return !root.at(JsonPointer.compile(pointer)).isMissingNode();
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException _) {
             return false;
         }
     }

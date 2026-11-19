@@ -18,7 +18,7 @@ import javafx.scene.layout.VBox;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiFunction;
+import java.util.function.BiPredicate;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -71,7 +71,7 @@ public final class SchemaPane {
      *                       never removes anything itself
      */
     public static Node build(OasDocument document, String schemaName,
-                             BiFunction<String, String, Boolean> onRenameSchema,
+                             BiPredicate<String, String> onRenameSchema,
                              Consumer<String> onRemoveSchema) {
         Schema schema = document.getComponents().getSchemas().getSchema(schemaName);
         List<String> schemaNames = document.getComponents().getSchemas().names();
@@ -79,7 +79,7 @@ public final class SchemaPane {
         TextField nameField = FormFields.renameField(schemaName, candidate ->
                 schemaNames.contains(candidate)
                         ? "A schema named \"" + candidate + "\" already exists."
-                        : onRenameSchema.apply(schemaName, candidate) ? null : "");
+                        : onRenameSchema.test(schemaName, candidate) ? null : "");
         nameField.setId("schema-name");
         if (schema == null) {
             return FormFields.root(

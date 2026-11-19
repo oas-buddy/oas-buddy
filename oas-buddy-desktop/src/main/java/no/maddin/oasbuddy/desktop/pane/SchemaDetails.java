@@ -17,6 +17,7 @@ import no.maddin.oasbuddy.core.model.SchemaValues;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -137,9 +138,9 @@ final class SchemaDetails {
                 flag("Deprecated", schema::isDeprecated, schema::setDeprecated));
     }
 
-    private static CheckBox flag(String label, Supplier<Boolean> getter, Consumer<Boolean> setter) {
+    private static CheckBox flag(String label, BooleanSupplier getter, Consumer<Boolean> setter) {
         CheckBox box = new CheckBox(label);
-        box.setSelected(getter.get());
+        box.setSelected(getter.getAsBoolean());
         box.selectedProperty().addListener((obs, oldVal, newVal) -> setter.accept(newVal));
         return box;
     }

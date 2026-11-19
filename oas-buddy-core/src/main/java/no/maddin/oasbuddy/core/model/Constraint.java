@@ -133,7 +133,7 @@ public enum Constraint {
             if (writable) {
                 return value;
             }
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException _) {
             // Falls through to the rejection below.
         }
         throw new IllegalArgumentException("\"" + text + "\" is not a valid " + key);

@@ -42,7 +42,7 @@ public final class OasValidator {
     private static JsonNode parse(String content) {
         try {
             return YAML.readTree(content);
-        } catch (JsonProcessingException e) {
+        } catch (JsonProcessingException _) {
             return null;
         }
     }
