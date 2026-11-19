@@ -60,6 +60,11 @@ public final class OAuthFlowsPane {
         return section;
     }
 
+    /** A node id within one flow's block, e.g. {@code flow-implicit-scopes}. */
+    private static String flowId(String flowName, String suffix) {
+        return "flow-" + flowName + "-" + suffix;
+    }
+
     private static Node flowBlock(OAuthFlows flows, String flowName,
                                   RemovalConfirmation confirmation, Runnable onChanged) {
         OAuthFlow flow = flows.getFlow(flowName);
@@ -68,7 +73,7 @@ public final class OAuthFlowsPane {
         boolean present = flows.names().contains(flowName);
 
         CheckBox enabled = new CheckBox(flowName);
-        enabled.setId("flow-" + flowName + "-enabled");
+        enabled.setId(flowId(flowName, "enabled"));
         enabled.getStyleClass().add(Styles.TEXT_BOLD);
         enabled.setSelected(present);
         FormFields.guarded(enabled.selectedProperty(), (was, now) -> {
@@ -90,7 +95,7 @@ public final class OAuthFlowsPane {
         if (flow == null) {
             if (present) {
                 Label note = new Label("Not a flow object; left exactly as it was loaded.");
-                note.setId("flow-" + flowName + "-not-editable");
+                note.setId(flowId(flowName, "not-editable"));
                 note.getStyleClass().addAll(Styles.TEXT_MUTED, Styles.WARNING);
                 note.setPadding(new Insets(0, 0, 0, 24));
                 block.getChildren().add(note);
@@ -105,21 +110,21 @@ public final class OAuthFlowsPane {
 
     private static Node urlGrid(String flowName, OAuthFlow flow) {
         GridPane grid = FormFields.grid();
-        grid.setId("flow-" + flowName + "-urls");
+        grid.setId(flowId(flowName, "urls"));
         grid.setPadding(new Insets(0, 0, 0, 24));
 
         int row = 0;
         for (OAuthFlowUrl url : OAuthFlows.urlsOf(flowName)) {
             TextField field = FormFields.textRow(grid, row++, URL_LABELS.get(url),
                     () -> flow.getUrl(url), value -> flow.setUrl(url, value));
-            field.setId("flow-" + flowName + "-" + url.field());
+            field.setId(flowId(flowName, url.field()));
         }
         return grid;
     }
 
     private static Node scopes(String flowName, OAuthFlow flow, Runnable onChanged) {
         GridPane grid = FormFields.grid();
-        grid.setId("flow-" + flowName + "-scopes");
+        grid.setId(flowId(flowName, "scopes"));
         grid.getColumnConstraints().addAll(
                 FormFields.column(HPos.LEFT, Priority.NEVER),
                 FormFields.column(HPos.LEFT, Priority.ALWAYS),
@@ -139,10 +144,10 @@ public final class OAuthFlowsPane {
         }
 
         TextField newScope = new TextField();
-        newScope.setId("flow-" + flowName + "-new-scope");
+        newScope.setId(flowId(flowName, "new-scope"));
         newScope.setPromptText("read:pets");
         Button add = new Button("Add scope");
-        add.setId("flow-" + flowName + "-add-scope");
+        add.setId(flowId(flowName, "add-scope"));
         add.getStyleClass().add(Styles.ACCENT);
         add.setOnAction(e -> {
             String name = newScope.getText();
@@ -160,7 +165,7 @@ public final class OAuthFlowsPane {
 
     private static Node[] scopeRow(String flowName, OAuthFlow flow, String scope, int index, Runnable onChanged) {
         TextField name = new TextField(scope);
-        name.setId("flow-" + flowName + "-scope-name-" + index);
+        name.setId(flowId(flowName, "scope-name-" + index));
         // Renamed on commit rather than per keystroke: a rename rebuilds the scope map, and doing
         // that on every character would rebuild it once per letter and fight the caret.
         name.focusedProperty().addListener((obs, was, focused) -> {
@@ -171,12 +176,12 @@ public final class OAuthFlowsPane {
         name.setOnAction(e -> renameTo(flow, scope, name.getText(), onChanged));
 
         TextField description = new TextField(nullToEmpty(flow.getScopeDescription(scope)));
-        description.setId("flow-" + flowName + "-scope-description-" + index);
+        description.setId(flowId(flowName, "scope-description-" + index));
         description.setMaxWidth(Double.MAX_VALUE);
         description.textProperty().addListener((obs, was, now) -> flow.setScope(scope, now));
 
         Button remove = new Button("Remove");
-        remove.setId("flow-" + flowName + "-remove-scope-" + index);
+        remove.setId(flowId(flowName, "remove-scope-" + index));
         remove.getStyleClass().addAll(Styles.DANGER, Styles.BUTTON_OUTLINED);
         remove.setOnAction(e -> {
             flow.removeScope(scope);

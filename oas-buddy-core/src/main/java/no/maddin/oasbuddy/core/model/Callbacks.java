@@ -5,7 +5,10 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 /** An operation's named {@code callbacks}, each inline or a reference to {@code components.callbacks}. */
 public final class Callbacks extends ReferableObjects<Callback> {
 
+    /** The field holding an operation's callbacks. */
+    public static final String FIELD = "callbacks";
+
     Callbacks(ObjectNode parent) {
-        super(parent, "callbacks", ComponentCallbacks.SECTION, Callback::new, Callback::node);
+        super(parent, FIELD, ComponentCallbacks.SECTION, Callback::new, Callback::node);
     }
 }

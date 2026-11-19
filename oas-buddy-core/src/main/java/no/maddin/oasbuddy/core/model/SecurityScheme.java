@@ -18,8 +18,13 @@ import java.util.Map;
  */
 public final class SecurityScheme {
 
+    private static final String OAUTH2 = "oauth2";
+    private static final String SCHEME = "scheme";
+    private static final String BEARER_FORMAT = "bearerFormat";
+    private static final String OPEN_ID_CONNECT_URL = "openIdConnectUrl";
+
     /** The types this editor has a form for, in the order the type picker offers them. */
-    public static final List<String> EDITABLE_TYPES = List.of("apiKey", "http", "oauth2", "openIdConnect");
+    public static final List<String> EDITABLE_TYPES = List.of("apiKey", "http", OAUTH2, "openIdConnect");
 
     /** Where an {@code apiKey} scheme carries its key, per OAS 3.0. */
     public static final List<String> API_KEY_LOCATIONS = List.of("query", "header", "cookie");
@@ -31,9 +36,9 @@ public final class SecurityScheme {
      */
     private static final Map<String, List<String>> FIELDS_BY_TYPE = Map.of(
             "apiKey", List.of("name", "in"),
-            "http", List.of("scheme", "bearerFormat"),
-            "oauth2", List.of("flows"),
-            "openIdConnect", List.of("openIdConnectUrl"));
+            "http", List.of(SCHEME, BEARER_FORMAT),
+            OAUTH2, List.of("flows"),
+            "openIdConnect", List.of(OPEN_ID_CONNECT_URL));
 
     private final ObjectNode node;
 
@@ -83,7 +88,7 @@ public final class SecurityScheme {
      * object ({@code implicit: ~}) defines no scopes and is skipped.
      */
     public List<String> declaredScopes() {
-        if (!"oauth2".equals(getType())) {
+        if (!OAUTH2.equals(getType())) {
             return List.of();
         }
         OAuthFlows flows = getFlows();
@@ -127,26 +132,26 @@ public final class SecurityScheme {
     }
 
     public String getScheme() {
-        return JsonNodes.text(node, "scheme");
+        return JsonNodes.text(node, SCHEME);
     }
 
     public void setScheme(String scheme) {
-        JsonNodes.setText(node, "scheme", scheme);
+        JsonNodes.setText(node, SCHEME, scheme);
     }
 
     public String getBearerFormat() {
-        return JsonNodes.text(node, "bearerFormat");
+        return JsonNodes.text(node, BEARER_FORMAT);
     }
 
     public void setBearerFormat(String bearerFormat) {
-        JsonNodes.setText(node, "bearerFormat", bearerFormat);
+        JsonNodes.setText(node, BEARER_FORMAT, bearerFormat);
     }
 
     public String getOpenIdConnectUrl() {
-        return JsonNodes.text(node, "openIdConnectUrl");
+        return JsonNodes.text(node, OPEN_ID_CONNECT_URL);
     }
 
     public void setOpenIdConnectUrl(String openIdConnectUrl) {
-        JsonNodes.setText(node, "openIdConnectUrl", openIdConnectUrl);
+        JsonNodes.setText(node, OPEN_ID_CONNECT_URL, openIdConnectUrl);
     }
 }
