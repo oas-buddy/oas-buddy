@@ -8,7 +8,6 @@ import no.maddin.oasbuddy.core.document.DocumentWriter;
 import no.maddin.oasbuddy.core.document.OasDocument;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -91,7 +90,7 @@ class ServersTest {
     }
 
     @Test
-    void aVariableThatIsNotAnObjectIsListedButNotReadable() throws IOException {
+    void aVariableThatIsNotAnObjectIsListedButNotReadable() {
         OasDocument document = DocumentReader.read(
                 "{\"openapi\":\"3.0.3\",\"servers\":[{\"url\":\"https://{a}\",\"variables\":{\"a\":\"x\"}}]}",
                 DocumentFormat.JSON);
@@ -113,7 +112,7 @@ class ServersTest {
     }
 
     @Test
-    void serversOnPathAndOperationRoundTripThroughYamlAndJson() throws IOException {
+    void serversOnPathAndOperationRoundTripThroughYamlAndJson() {
         for (DocumentFormat format : DocumentFormat.values()) {
             OasDocument document = OasDocument.newDocument(format);
             Server root = document.getServers().add("https://{env}.example.com");
@@ -133,7 +132,7 @@ class ServersTest {
     }
 
     @Test
-    void openingADocumentWithoutServersAddsNone() throws IOException {
+    void openingADocumentWithoutServersAddsNone() {
         OasDocument document = DocumentReader.read("{\"openapi\":\"3.0.3\",\"paths\":{}}", DocumentFormat.JSON);
 
         document.getServers().all();

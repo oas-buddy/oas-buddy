@@ -149,7 +149,7 @@ class HeadersEditorTest extends ApplicationTest {
                 .tryQuery().isPresent());
 
         Node row = lookup("." + "header-row").query();
-        interact(() -> ((Button) row.lookup(".button")).fire());
+        interact(((Button) row.lookup(".button"))::fire);
         assertFalse(document.getRoot().get("paths").get("/pets").get("get").get("responses").get("200")
                 .has("headers"));
     }

@@ -22,7 +22,7 @@ class DocumentWriterTest {
     Path tempDir;
 
     @Test
-    void jsonKeysAreFollowedByASpaceButNotPrecededByOne() throws IOException {
+    void jsonKeysAreFollowedByASpaceButNotPrecededByOne() {
         OasDocument document = DocumentReader.read(
                 "{\"openapi\":\"3.0.3\",\"info\":{\"title\":\"T\",\"version\":\"1\"},\"paths\":{}}",
                 DocumentFormat.JSON);

@@ -134,8 +134,7 @@ public final class PathItemPane {
             }
         }
         sections.add(methodButtons);
-        VBox box = new VBox(8, sections.toArray(Node[]::new));
-        return box;
+        return new VBox(8, sections.toArray(Node[]::new));
     }
 
     /** Summary, description, parameters and servers: what a path item has whether or not it sits under {@code paths}. */

@@ -9,7 +9,6 @@ import no.maddin.oasbuddy.core.document.DocumentWriter;
 import no.maddin.oasbuddy.core.document.OasDocument;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -99,7 +98,7 @@ class ResponseLinksTest {
     }
 
     @Test
-    void aLinkThatIsNotAnObjectIsListedButNotReadable() throws IOException {
+    void aLinkThatIsNotAnObjectIsListedButNotReadable() {
         OasDocument document = DocumentReader.read(
                 "{\"openapi\":\"3.0.3\",\"paths\":{\"/a\":{\"get\":{\"responses\":{\"200\":"
                         + "{\"description\":\"ok\",\"links\":{\"Odd\":\"~\"}}}}}}}", DocumentFormat.JSON);
@@ -111,7 +110,7 @@ class ResponseLinksTest {
     }
 
     @Test
-    void operationIdsAreCollectedFromEveryPath() throws IOException {
+    void operationIdsAreCollectedFromEveryPath() {
         OasDocument document = DocumentReader.read("""
                 openapi: 3.0.3
                 paths:
@@ -127,7 +126,7 @@ class ResponseLinksTest {
     }
 
     @Test
-    void componentLinksAreLazyAndRoundTripThroughYamlAndJson() throws IOException {
+    void componentLinksAreLazyAndRoundTripThroughYamlAndJson() {
         for (DocumentFormat format : DocumentFormat.values()) {
             OasDocument document = OasDocument.newDocument(format);
             assertTrue(document.getComponents().getLinks().names().isEmpty());

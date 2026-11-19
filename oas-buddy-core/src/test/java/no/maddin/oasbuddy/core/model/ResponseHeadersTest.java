@@ -8,7 +8,6 @@ import no.maddin.oasbuddy.core.document.DocumentWriter;
 import no.maddin.oasbuddy.core.document.OasDocument;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -86,7 +85,7 @@ class ResponseHeadersTest {
     }
 
     @Test
-    void aHeaderThatIsNotAnObjectIsListedButNotReadable() throws IOException {
+    void aHeaderThatIsNotAnObjectIsListedButNotReadable() {
         OasDocument document = DocumentReader.read(
                 "{\"openapi\":\"3.0.3\",\"paths\":{\"/a\":{\"get\":{\"responses\":{\"200\":"
                         + "{\"description\":\"ok\",\"headers\":{\"X-Odd\":\"~\"}}}}}}}", DocumentFormat.JSON);
@@ -98,7 +97,7 @@ class ResponseHeadersTest {
     }
 
     @Test
-    void componentHeadersAreLazyAndRoundTripThroughYamlAndJson() throws IOException {
+    void componentHeadersAreLazyAndRoundTripThroughYamlAndJson() {
         for (DocumentFormat format : DocumentFormat.values()) {
             OasDocument document = OasDocument.newDocument(format);
             assertTrue(document.getComponents().getHeaders().names().isEmpty());
