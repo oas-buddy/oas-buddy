@@ -44,8 +44,22 @@ public final class DocumentReader {
     static ObjectMapper mapperFor(DocumentFormat format) {
         return switch (format) {
             case JSON -> new ObjectMapper();
+            // These are generator features, so they shape what we write without affecting reads.
+            //
+            // SPLIT_LINES is on by default and hard-wraps a long description at about eighty
+            // columns using YAML continuation escapes, so a one-word edit rewrites several lines of
+            // the diff this editor exists to keep small.
+            //
+            // MINIMIZE_QUOTES drops the quotes wherever the scalar is unambiguous, which is how
+            // OAS documents are written by hand. ALWAYS_QUOTE_NUMBERS_AS_STRINGS has to go with it:
+            // on its own MINIMIZE_QUOTES only keeps the quotes around YAML's reserved words (true,
+            // null, ...), so the string "3.0" would be written as a bare 3.0 and read back as a
+            // number. DocumentWriterTest guards that case.
             case YAML -> new ObjectMapper(YAMLFactory.builder()
                     .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+                    .disable(YAMLGenerator.Feature.SPLIT_LINES)
+                    .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+                    .enable(YAMLGenerator.Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS)
                     .build());
         };
     }

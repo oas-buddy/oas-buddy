@@ -34,10 +34,18 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y xvfb
 
       # verify rather than test: it also writes the JaCoCo coverage report Sonar reads.
+      #
+      # -U is load-bearing, not habit. When a download fails transiently, the resolver records the
+      # artifact as absent in ~/.m2 and will not look again; setup-java's maven cache then saves
+      # that record and restores it on every later run, whose key is a hash of the POMs and so does
+      # not change until a POM does. The build then fails identically every time with
+      # "Could not find artifact ... (absent)" for an artifact that is sitting in Central. -U
+      # forces a re-check for missing releases, which is what breaks that loop. There are no
+      # snapshot dependencies here, so it costs nothing else.
       - name: Build and test
         if: env.SONAR_TOKEN == ''
-        run: xvfb-run -a mvn -B verify
+        run: xvfb-run -a mvn -B -U verify
 
       - name: Build, test and analyse with SonarCloud
         if: env.SONAR_TOKEN != ''
-        run: xvfb-run -a mvn -B verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+        run: xvfb-run -a mvn -B -U verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar

@@ -23,7 +23,16 @@ public final class DocumentWriter {
     private DocumentWriter() {
     }
 
+    /**
+     * Writes the document to a file, in the format the file name names.
+     *
+     * <p>Symmetric with {@link DocumentReader#read(Path)}, which also takes the format from the
+     * path and stamps it onto the document: that is what makes "Save As {@code api.yaml}" convert a
+     * document loaded from JSON, instead of writing JSON bytes into a {@code .yaml} file. A path
+     * whose extension names no format leaves the document's own format alone.
+     */
     public static void write(OasDocument document, Path file) throws IOException {
+        DocumentFormat.detect(file.getFileName().toString()).ifPresent(document::setFormat);
         Files.writeString(file, write(document));
     }
 
