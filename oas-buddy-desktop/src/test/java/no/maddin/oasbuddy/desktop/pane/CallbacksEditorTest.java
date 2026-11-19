@@ -73,12 +73,12 @@ class CallbacksEditorTest extends ApplicationTest {
 
     private void addCallback(String name) {
         interact(() -> ((TextField) byClass("new-callback-name")).setText(name));
-        interact(() -> ((Button) byClass("add-callback")).fire());
+        interact(((Button) byClass("add-callback"))::fire);
     }
 
     private void addExpression(String expression) {
         interact(() -> ((TextField) byClass(CallbackExpressions.NEW_NAME_CLASS)).setText(expression));
-        interact(() -> ((Button) byClass(CallbackExpressions.ADD_CLASS)).fire());
+        interact(((Button) byClass(CallbackExpressions.ADD_CLASS))::fire);
     }
 
     @Test
@@ -95,7 +95,7 @@ class CallbacksEditorTest extends ApplicationTest {
         var callback = subscribe.getCallbacks().get("onEvent");
         assertEquals(List.of(URL, "{$request.body#/otherUrl}"), callback.expressions());
 
-        interact(() -> ((Button) byClass(PathItemPane.ADD_OPERATION_CLASS)).fire());
+        interact(((Button) byClass(PathItemPane.ADD_OPERATION_CLASS))::fire);
         assertEquals(1, callback.get(URL).getOperations().size()
                 + callback.get("{$request.body#/otherUrl}").getOperations().size());
     }
@@ -131,13 +131,13 @@ class CallbacksEditorTest extends ApplicationTest {
         showOperation();
         confirmAnswer.set(false);
 
-        interact(() -> ((Button) byClass(CallbackExpressions.REMOVE_CLASS)).fire());
+        interact(((Button) byClass(CallbackExpressions.REMOVE_CLASS))::fire);
 
         assertEquals(List.of("Remove expression \"" + URL + "\"?"), asked);
         assertEquals(List.of(URL), subscribe.getCallbacks().get("onEvent").expressions());
 
         confirmAnswer.set(true);
-        interact(() -> ((Button) byClass(CallbackExpressions.REMOVE_CLASS)).fire());
+        interact(((Button) byClass(CallbackExpressions.REMOVE_CLASS))::fire);
         assertTrue(subscribe.getCallbacks().get("onEvent").expressions().isEmpty());
     }
 
@@ -146,7 +146,7 @@ class CallbacksEditorTest extends ApplicationTest {
         subscribe.getCallbacks().add("onEvent").add(URL);
         showOperation();
 
-        interact(() -> ((Button) byClass(CallbackExpressions.REMOVE_CLASS)).fire());
+        interact(((Button) byClass(CallbackExpressions.REMOVE_CLASS))::fire);
 
         assertTrue(asked.isEmpty());
         assertTrue(subscribe.getCallbacks().get("onEvent").expressions().isEmpty());
@@ -204,7 +204,7 @@ class CallbacksEditorTest extends ApplicationTest {
     }
 
     @Test
-    void aCallbackAndAnExpressionThatAreNotObjectsAreShownAndLeftAlone() throws Exception {
+    void aCallbackAndAnExpressionThatAreNotObjectsAreShownAndLeftAlone() {
         document = no.maddin.oasbuddy.core.document.DocumentReader.read("""
                 openapi: 3.0.3
                 paths:

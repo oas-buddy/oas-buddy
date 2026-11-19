@@ -134,7 +134,7 @@ public final class OperationPane {
         ToggleGroup group = new ToggleGroup();
         HBox choices = new HBox(12,
                 modeRadio(group, INHERIT_MODE, "Inherit document default", mode,
-                        () -> security.undeclare(), operation, box, catalog),
+                        security::undeclare, operation, box, catalog),
                 modeRadio(group, PUBLIC_MODE, "Public (no security)", mode,
                         security::declarePublic, operation, box, catalog),
                 modeRadio(group, REQUIRE_MODE, "Require", mode,

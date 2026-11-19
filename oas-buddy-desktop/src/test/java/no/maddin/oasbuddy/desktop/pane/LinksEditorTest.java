@@ -107,14 +107,14 @@ class LinksEditorTest extends ApplicationTest {
     void parametersAreAddedEditedAndRemoved() {
         addLink("GetPet");
         interact(() -> ((TextField) byClass(LinkForm.NEW_PARAMETER_CLASS)).setText("id"));
-        interact(() -> ((Button) byClass(LinkForm.ADD_PARAMETER_CLASS)).fire());
+        interact(((Button) byClass(LinkForm.ADD_PARAMETER_CLASS))::fire);
         interact(() -> ((TextField) byClass(LinkForm.PARAMETER_VALUE_CLASS)).setText("$response.body#/id"));
 
         var parameters = created.getLinks().get("GetPet").getParameters();
         assertEquals(List.of("id"), parameters.names());
         assertEquals("$response.body#/id", parameters.get("id").asText());
 
-        interact(() -> ((Button) byClass(LinkForm.PARAMETER_VALUE_CLASS).getParent().lookup(".button")).fire());
+        interact(((Button) byClass(LinkForm.PARAMETER_VALUE_CLASS).getParent().lookup(".button"))::fire);
         assertTrue(created.getLinks().get("GetPet").getParameters().names().isEmpty());
     }
 
@@ -161,7 +161,7 @@ class LinksEditorTest extends ApplicationTest {
                 .tryQuery().isPresent());
 
         Node row = lookup("." + "link-row").query();
-        interact(() -> ((Button) row.lookup(".button")).fire());
+        interact(((Button) row.lookup(".button"))::fire);
         assertFalse(document.getRoot().get("paths").get("/pets").get("post").get("responses").get("201")
                 .has("links"));
     }

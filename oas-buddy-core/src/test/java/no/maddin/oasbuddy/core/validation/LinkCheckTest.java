@@ -99,7 +99,7 @@ class LinkCheckTest {
                               operationRef: '#/paths/~1a/get'
                 """);
 
-        assertEquals(1, messages.size(), () -> messages.toString());
+        assertEquals(1, messages.size(), messages::toString);
         assertTrue(messages.getFirst().startsWith("Link sets both operationId and operationRef"));
     }
 

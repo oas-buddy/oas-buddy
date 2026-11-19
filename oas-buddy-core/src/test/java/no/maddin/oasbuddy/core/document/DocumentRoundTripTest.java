@@ -102,7 +102,7 @@ class DocumentRoundTripTest {
         assertComponentResponsesRoundTrip(DocumentFormat.JSON);
     }
 
-    private static void assertComponentResponsesRoundTrip(DocumentFormat format) throws IOException {
+    private static void assertComponentResponsesRoundTrip(DocumentFormat format) {
         OasDocument original = OasDocument.newDocument(format);
         original.getComponents().getResponses().addResponse("NotFound").setDescription("Not found");
         var responses = original.getPaths().addPath("/pets")
@@ -130,7 +130,7 @@ class DocumentRoundTripTest {
         assertParametersRoundTrip(DocumentFormat.JSON);
     }
 
-    private static void assertParametersRoundTrip(DocumentFormat format) throws IOException {
+    private static void assertParametersRoundTrip(DocumentFormat format) {
         OasDocument original = OasDocument.newDocument(format);
         original.getComponents().getParameters().addParameter("Limit", "limit", "query")
                 .getSchema().setType("integer");
@@ -162,7 +162,7 @@ class DocumentRoundTripTest {
         assertMediaTypesRoundTrip(DocumentFormat.JSON);
     }
 
-    private static void assertMediaTypesRoundTrip(DocumentFormat format) throws IOException {
+    private static void assertMediaTypesRoundTrip(DocumentFormat format) {
         OasDocument original = OasDocument.newDocument(format);
         original.getComponents().getExamples().addExample("Cat")
                 .setValue(com.fasterxml.jackson.databind.node.TextNode.valueOf("Tom"));
@@ -198,7 +198,7 @@ class DocumentRoundTripTest {
         assertTagsRoundTrip(DocumentFormat.JSON);
     }
 
-    private static void assertTagsRoundTrip(DocumentFormat format) throws IOException {
+    private static void assertTagsRoundTrip(DocumentFormat format) {
         OasDocument original = OasDocument.newDocument(format);
         original.getTags().add("pets").setDescription("Everything about pets");
         original.getTags().add("store");

@@ -8,7 +8,6 @@ import no.maddin.oasbuddy.core.document.DocumentWriter;
 import no.maddin.oasbuddy.core.document.OasDocument;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -50,7 +49,7 @@ class ExternalDocsTest {
     }
 
     @Test
-    void anExtensionKeepsTheObjectAlive() throws IOException {
+    void anExtensionKeepsTheObjectAlive() {
         OasDocument document = DocumentReader.read(
                 "{\"openapi\":\"3.0.3\",\"externalDocs\":{\"url\":\"u\",\"x-note\":1}}", DocumentFormat.JSON);
 
@@ -71,7 +70,7 @@ class ExternalDocsTest {
     }
 
     @Test
-    void reachableFromRootTagOperationAndSchemaAndRoundTrips() throws IOException {
+    void reachableFromRootTagOperationAndSchemaAndRoundTrips() {
         for (DocumentFormat format : DocumentFormat.values()) {
             OasDocument document = OasDocument.newDocument(format);
             document.getExternalDocs().setUrl("https://root");

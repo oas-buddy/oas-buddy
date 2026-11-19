@@ -8,7 +8,6 @@ import no.maddin.oasbuddy.core.document.DocumentWriter;
 import no.maddin.oasbuddy.core.document.OasDocument;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -102,7 +101,7 @@ class CallbacksTest {
     }
 
     @Test
-    void aCallbackThatIsNotAnObjectIsListedButNotReadable() throws IOException {
+    void aCallbackThatIsNotAnObjectIsListedButNotReadable() {
         OasDocument document = DocumentReader.read("""
                 openapi: 3.0.3
                 paths:
@@ -122,7 +121,7 @@ class CallbacksTest {
     }
 
     @Test
-    void componentCallbacksAreLazyAndRoundTripThroughYamlAndJson() throws IOException {
+    void componentCallbacksAreLazyAndRoundTripThroughYamlAndJson() {
         for (DocumentFormat format : DocumentFormat.values()) {
             OasDocument document = OasDocument.newDocument(format);
             assertTrue(document.getComponents().getCallbacks().names().isEmpty());

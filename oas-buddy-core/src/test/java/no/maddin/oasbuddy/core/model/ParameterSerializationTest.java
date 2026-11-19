@@ -8,7 +8,6 @@ import no.maddin.oasbuddy.core.document.DocumentWriter;
 import no.maddin.oasbuddy.core.document.OasDocument;
 import org.junit.jupiter.api.Test;
 
-import java.io.IOException;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -102,7 +101,7 @@ class ParameterSerializationTest {
     }
 
     @Test
-    void aParameterUsingContentIsRecognisedAndItsContentReadable() throws IOException {
+    void aParameterUsingContentIsRecognisedAndItsContentReadable() {
         OasDocument document = DocumentReader.read("""
                 {"openapi":"3.0.3","paths":{"/a":{"get":{"parameters":[
                   {"name":"filter","in":"query","content":{"application/json":{"schema":{"type":"object"}}}}]}}}}
@@ -116,7 +115,7 @@ class ParameterSerializationTest {
     }
 
     @Test
-    void serializationDetailRoundTripsThroughYamlAndJson() throws IOException {
+    void serializationDetailRoundTripsThroughYamlAndJson() {
         for (DocumentFormat format : DocumentFormat.values()) {
             OasDocument document = OasDocument.newDocument(format);
             Parameter tags = document.getPaths().addPath("/a").addOperation(HttpMethod.GET)
