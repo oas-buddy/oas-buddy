@@ -47,7 +47,7 @@ final class LinkForm {
         box.getChildren().add(labelled("Operation", operationIdBox(link, catalog)));
         box.getChildren().add(labelled("Operation ref", FormFields.boundTextField(link.getOperationRef(),
                 "#/paths/~1pets/get", OPERATION_REF_CLASS, link::setOperationRef)));
-        box.getChildren().add(labelled("Description", FormFields.boundTextField(link.getDescription(),
+        box.getChildren().add(labelled(FormFields.DESCRIPTION, FormFields.boundTextField(link.getDescription(),
                 "description", DESCRIPTION_CLASS, link::setDescription)));
         box.getChildren().add(labelled("Request body", requestBodyField(link)));
 

@@ -17,7 +17,7 @@ public final class InfoPane {
         int row = 0;
         FormFields.textRow(general, row++, "Title", info::getTitle, info::setTitle);
         FormFields.textRow(general, row++, "Version", info::getVersion, info::setVersion);
-        FormFields.textAreaRow(general, row++, "Description", info::getDescription, info::setDescription);
+        FormFields.textAreaRow(general, row++, FormFields.DESCRIPTION, info::getDescription, info::setDescription);
         FormFields.textRow(general, row, "Terms of service", info::getTermsOfService, info::setTermsOfService);
 
         GridPane contact = FormFields.grid();

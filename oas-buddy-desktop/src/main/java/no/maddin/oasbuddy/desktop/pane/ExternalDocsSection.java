@@ -34,7 +34,7 @@ final class ExternalDocsSection {
         TextField url = FormFields.textRow(grid, 0, "Url", docs::getUrl, docs::setUrl);
         url.getStyleClass().add(URL_CLASS);
         url.setPromptText("https://example.com/docs");
-        TextField description = FormFields.textRow(grid, 1, "Description", docs::getDescription, docs::setDescription);
+        TextField description = FormFields.textRow(grid, 1, FormFields.DESCRIPTION, docs::getDescription, docs::setDescription);
         description.getStyleClass().add(DESCRIPTION_CLASS);
 
         TitledPane section = new TitledPane("External docs", grid);

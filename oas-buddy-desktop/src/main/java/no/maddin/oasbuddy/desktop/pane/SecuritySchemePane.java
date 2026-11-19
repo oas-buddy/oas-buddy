@@ -68,7 +68,7 @@ public final class SecuritySchemePane {
             return true;
         });
         common.addRow(0, new Label("Type"), typeBox);
-        FormFields.textAreaRow(common, 1, "Description", scheme::getDescription, scheme::setDescription);
+        FormFields.textAreaRow(common, 1, FormFields.DESCRIPTION, scheme::getDescription, scheme::setDescription);
 
         fillTyped(scheme, typed, confirmation);
 

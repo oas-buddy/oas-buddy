@@ -73,14 +73,14 @@ public final class TagsPane {
             return;
         }
 
-        list.addRow(0, FormFields.columnHeading("Tag"), FormFields.columnHeading("Description"));
+        list.addRow(0, FormFields.columnHeading("Tag"), FormFields.columnHeading(FormFields.DESCRIPTION));
 
         int row = 1;
         for (Tag tag : all) {
             String name = tag.getName();
 
             TextField descriptionField = new TextField(nullToEmpty(tag.getDescription()));
-            descriptionField.setPromptText("Description");
+            descriptionField.setPromptText(FormFields.DESCRIPTION);
             descriptionField.textProperty().addListener((obs, oldVal, newVal) -> tag.setDescription(newVal));
 
             Button removeButton = new Button("Remove");
