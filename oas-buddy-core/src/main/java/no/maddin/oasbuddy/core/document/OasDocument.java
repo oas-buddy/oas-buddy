@@ -10,6 +10,8 @@ import no.maddin.oasbuddy.core.model.SecurityRequirements;
 import no.maddin.oasbuddy.core.model.Servers;
 import no.maddin.oasbuddy.core.model.Tags;
 
+import java.util.Optional;
+
 /**
  * Facade over an OpenAPI document tree. The tree (a Jackson {@link ObjectNode}) is the
  * single source of truth; this class and the types in {@code no.maddin.oasbuddy.core.model} only
@@ -34,9 +36,21 @@ public final class OasDocument {
         return new OasDocument(root, format);
     }
 
+    /** A new OAS 3.0 document. */
     public static OasDocument newDocument(DocumentFormat format) {
+        return newDocument(format, OasVersion.V3_0);
+    }
+
+    /**
+     * A new, minimal document of the given version. Swagger 2.0 is refused: it is only ever
+     * imported, never created or written.
+     */
+    public static OasDocument newDocument(DocumentFormat format, OasVersion version) {
+        if (version == OasVersion.V2_0) {
+            throw new IllegalArgumentException("Swagger 2.0 documents can only be imported, not created");
+        }
         ObjectNode root = JsonNodeFactory.instance.objectNode();
-        root.put(OPENAPI, "3.0.3");
+        root.put(version.key(), version.newDocumentVersion());
         ObjectNode info = JsonNodes.objectChild(root, "info");
         info.put("title", "New API");
         info.put("version", "0.1.0");
@@ -60,6 +74,14 @@ public final class OasDocument {
      */
     public void setFormat(DocumentFormat format) {
         this.format = format;
+    }
+
+    /**
+     * The OAS version this document declares, or empty when it declares none this editor knows.
+     * Reading never touches the version key; see {@link OasVersion#detect}.
+     */
+    public Optional<OasVersion> getVersion() {
+        return OasVersion.detect(root);
     }
 
     public String getOpenApiVersion() {

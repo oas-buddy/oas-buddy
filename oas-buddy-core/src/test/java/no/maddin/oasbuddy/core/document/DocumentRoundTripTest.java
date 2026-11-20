@@ -91,6 +91,18 @@ class DocumentRoundTripTest {
         assertRoundTrips("reusable.json", DocumentFormat.JSON);
     }
 
+    // 3.1 keys the 3.0 facade has no field for (info.summary, license.identifier, a type array,
+    // a numeric exclusiveMinimum) must come back exactly as they were read.
+    @Test
+    void anOas31DocumentRoundTripsInYaml() throws IOException {
+        assertRoundTrips("petstore-3.1.yaml", DocumentFormat.YAML);
+    }
+
+    @Test
+    void anOas31DocumentRoundTripsInJson() throws IOException {
+        assertRoundTrips("petstore-3.1.json", DocumentFormat.JSON);
+    }
+
     /** Component responses and references to them, built through the facade, round-trip in order. */
     @Test
     void componentResponsesBuiltThroughTheFacadeRoundTripInYaml() {
