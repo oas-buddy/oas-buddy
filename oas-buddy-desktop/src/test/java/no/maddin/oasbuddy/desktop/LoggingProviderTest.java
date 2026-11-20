@@ -39,8 +39,8 @@ class LoggingProviderTest {
         List<String> captured = new ArrayList<>();
         Handler collector = new Handler() {
             @Override
-            public void publish(LogRecord record) {
-                captured.add(record.getMessage());
+            public void publish(LogRecord logRecord) {
+                captured.add(logRecord.getMessage());
             }
 
             @Override

@@ -26,10 +26,11 @@ class ExampleRemovalTest {
             return false;
         }, () -> { });
 
-        assertEquals(List.of("Remove example \"Cat\"? | Still referenced by:\n"
-                + "  paths → /pets → get → responses → 200 → content → application/json → examples → cat\n"
-                + "\n"
-                + "Those references will be left dangling."), asked);
+        assertEquals(List.of("""
+                Remove example "Cat"? | Still referenced by:
+                  paths → /pets → get → responses → 200 → content → application/json → examples → cat
+
+                Those references will be left dangling."""), asked);
     }
 
     @Test

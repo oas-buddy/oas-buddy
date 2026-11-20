@@ -190,10 +190,8 @@ abstract class ReferableList<T> {
         if (!renamable()) {
             return new Label(name);
         }
-        TextField nameField = FormFields.renameField(name, candidate ->
-                entries.names().contains(candidate)
-                        ? "A " + noun + " named \"" + candidate + "\" already exists."
-                        : entries.rename(name, candidate) ? null : "");
+        TextField nameField = FormFields.renameField(name, entries::names,
+                "A " + noun + " named \"%s\" already exists.", candidate -> entries.rename(name, candidate));
         nameField.getStyleClass().add(noun + "-name");
         nameField.setPrefColumnCount(12);
         // the row is rebuilt after a rename so its buttons act on the new key

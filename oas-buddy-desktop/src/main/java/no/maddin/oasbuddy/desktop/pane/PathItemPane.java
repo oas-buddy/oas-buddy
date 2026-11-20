@@ -46,10 +46,8 @@ public final class PathItemPane {
                              RemovalConfirmation confirmation, Runnable onRemovePath, Consumer<HttpMethod> onRemoveOperation) {
         PathItem pathItem = document.getPaths().getPathItem(path);
 
-        TextField nameField = FormFields.renameField(path, candidate ->
-                document.getPaths().pathNames().contains(candidate)
-                        ? "A path named \"" + candidate + "\" already exists."
-                        : onRenamePath.test(path, candidate) ? null : "");
+        TextField nameField = FormFields.renameField(path, () -> document.getPaths().pathNames(),
+                "A path named \"%s\" already exists.", candidate -> onRenamePath.test(path, candidate));
         nameField.setId("path-name");
         if (pathItem == null) {
             return FormFields.root(

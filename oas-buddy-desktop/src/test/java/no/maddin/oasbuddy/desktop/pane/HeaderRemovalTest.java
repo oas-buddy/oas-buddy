@@ -26,10 +26,11 @@ class HeaderRemovalTest {
             return false;
         }, () -> { });
 
-        assertEquals(List.of("Remove header \"Rate\"? | Still referenced by:\n"
-                + "  paths → /pets → get → responses → 200 → headers → X-Rate\n"
-                + "\n"
-                + "Those references will be left dangling."), asked);
+        assertEquals(List.of("""
+                Remove header "Rate"? | Still referenced by:
+                  paths → /pets → get → responses → 200 → headers → X-Rate
+
+                Those references will be left dangling."""), asked);
     }
 
     @Test

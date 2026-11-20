@@ -28,11 +28,12 @@ class ParameterRemovalTest {
             return false;
         }, () -> { });
 
-        assertEquals(List.of("Remove parameter \"Limit\"? | Still referenced by:\n"
-                + "  paths → /pets → parameters → [0]\n"
-                + "  paths → /pets → get → parameters → [0]\n"
-                + "\n"
-                + "Those references will be left dangling."), asked);
+        assertEquals(List.of("""
+                Remove parameter "Limit"? | Still referenced by:
+                  paths → /pets → parameters → [0]
+                  paths → /pets → get → parameters → [0]
+
+                Those references will be left dangling."""), asked);
     }
 
     @Test

@@ -26,10 +26,11 @@ class CallbackRemovalTest {
             return false;
         }, () -> { });
 
-        assertEquals(List.of("Remove callback \"Event\"? | Still referenced by:\n"
-                + "  paths → /pets → post → callbacks → onEvent\n"
-                + "\n"
-                + "Those references will be left dangling."), asked);
+        assertEquals(List.of("""
+                Remove callback "Event"? | Still referenced by:
+                  paths → /pets → post → callbacks → onEvent
+
+                Those references will be left dangling."""), asked);
     }
 
     @Test

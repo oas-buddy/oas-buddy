@@ -50,7 +50,10 @@ public final class SchemaPane {
                 return TYPED;
             }
             Boolean allowed = schema.getAdditionalPropertiesAllowed();
-            return allowed == null ? UNSPECIFIED : allowed ? ANY : NONE;
+            if (allowed == null) {
+                return UNSPECIFIED;
+            }
+            return allowed ? ANY : NONE;
         }
 
         @Override
@@ -76,10 +79,8 @@ public final class SchemaPane {
         Schema schema = document.getComponents().getSchemas().getSchema(schemaName);
         List<String> schemaNames = document.getComponents().getSchemas().names();
 
-        TextField nameField = FormFields.renameField(schemaName, candidate ->
-                schemaNames.contains(candidate)
-                        ? "A schema named \"" + candidate + "\" already exists."
-                        : onRenameSchema.test(schemaName, candidate) ? null : "");
+        TextField nameField = FormFields.renameField(schemaName, () -> schemaNames,
+                "A schema named \"%s\" already exists.", candidate -> onRenameSchema.test(schemaName, candidate));
         nameField.setId("schema-name");
         if (schema == null) {
             return FormFields.root(
@@ -107,9 +108,7 @@ public final class SchemaPane {
         FormFields.textRow(grid, row++,
                 "Required properties (comma separated)",
                 () -> String.join(", ", schema.getRequired()),
-                value -> schema.setRequired(value == null || value.isBlank()
-                        ? List.of()
-                        : List.of(value.split("\\s*,\\s*"))));
+                value -> schema.setRequired(FormFields.commaSeparated(value)));
 
         Label additionalLabel = new Label("Additional properties");
         Node additionalControls = additionalPropertiesControls(schema, schemaNames);

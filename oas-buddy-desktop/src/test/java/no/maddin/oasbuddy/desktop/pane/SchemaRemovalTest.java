@@ -66,10 +66,11 @@ class SchemaRemovalTest {
             return false;
         }, () -> { });
 
-        assertEquals(List.of("Still referenced by:\n"
-                        + "  paths → /pets → get → responses → 200 → content → application/json → schema\n"
-                        + "\n"
-                        + "Those references will be left dangling."),
+        assertEquals(List.of("""
+                Still referenced by:
+                  paths → /pets → get → responses → 200 → content → application/json → schema
+
+                Those references will be left dangling."""),
                 asked);
     }
 
@@ -78,11 +79,12 @@ class SchemaRemovalTest {
         String described = SchemaRemoval.describeUsages(
                 List.of("paths → /pets → get", "paths → /pets → post"));
 
-        assertEquals("Still referenced by:\n"
-                + "  paths → /pets → get\n"
-                + "  paths → /pets → post\n"
-                + "\n"
-                + "Those references will be left dangling.", described);
+        assertEquals("""
+                Still referenced by:
+                  paths → /pets → get
+                  paths → /pets → post
+
+                Those references will be left dangling.""", described);
     }
 
     @Test

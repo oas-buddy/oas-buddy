@@ -87,10 +87,8 @@ final class LinkForm {
     }
 
     private static HBox parameterRow(LinkParameters parameters, String name, Runnable refresh) {
-        TextField nameField = FormFields.renameField(name, candidate ->
-                parameters.names().contains(candidate)
-                        ? "A parameter named \"" + candidate + "\" already exists."
-                        : parameters.rename(name, candidate) ? null : "");
+        TextField nameField = FormFields.renameField(name, parameters::names,
+                "A parameter named \"%s\" already exists.", candidate -> parameters.rename(name, candidate));
         nameField.getStyleClass().add(PARAMETER_NAME_CLASS);
         nameField.setPrefColumnCount(10);
         // the row is rebuilt after a rename so its field acts on the new key

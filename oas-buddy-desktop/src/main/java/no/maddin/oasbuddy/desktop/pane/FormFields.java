@@ -19,9 +19,13 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 
@@ -194,6 +198,35 @@ final class FormFields {
             }
         });
         return field;
+    }
+
+    /**
+     * The usual {@link #renameField(String, UnaryOperator)}: a name in {@code taken} is refused with
+     * {@code collisionFormat} (one {@code %s} for the candidate) before {@code rename} runs at all,
+     * and a rename that {@code rename} declines reverts quietly. {@code taken} is read at commit
+     * time, so it sees renames made since the field was built.
+     */
+    static TextField renameField(String initialName, Supplier<? extends Collection<String>> taken,
+                                 String collisionFormat, Predicate<String> rename) {
+        return renameField(initialName, candidate -> {
+            if (taken.get().contains(candidate)) {
+                return collisionFormat.formatted(candidate);
+            }
+            return rename.test(candidate) ? null : "";
+        });
+    }
+
+    /**
+     * A comma-separated list as typed by the user: each entry stripped, empty entries dropped.
+     * Splits on the bare comma and strips afterwards rather than splitting on a pattern with
+     * {@code \\s*} on both sides, whose two quantifiers backtrack against each other on a long
+     * run of spaces.
+     */
+    static List<String> commaSeparated(String text) {
+        if (text == null || text.isBlank()) {
+            return List.of();
+        }
+        return Arrays.stream(text.split(",")).map(String::strip).filter(v -> !v.isEmpty()).toList();
     }
 
     static String nullToEmpty(String value) {

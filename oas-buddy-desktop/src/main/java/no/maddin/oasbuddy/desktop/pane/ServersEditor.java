@@ -16,7 +16,6 @@ import no.maddin.oasbuddy.core.model.ServerVariable;
 import no.maddin.oasbuddy.core.model.ServerVariables;
 import no.maddin.oasbuddy.core.model.Servers;
 
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -140,10 +139,8 @@ final class ServersEditor {
 
     private static HBox variableRow(ServerVariables variables, String name, ServerVariable variable,
                                     Runnable onChanged) {
-        TextField nameField = FormFields.renameField(name, candidate ->
-                variables.names().contains(candidate)
-                        ? "A variable named \"" + candidate + "\" already exists."
-                        : variables.rename(name, candidate) ? null : "");
+        TextField nameField = FormFields.renameField(name, variables::names,
+                "A variable named \"%s\" already exists.", candidate -> variables.rename(name, candidate));
         nameField.getStyleClass().add(VARIABLE_NAME_CLASS);
         nameField.setPrefColumnCount(10);
         nameField.focusedProperty().addListener((obs, was, is) -> {
@@ -161,7 +158,7 @@ final class ServersEditor {
         TextField enumField = new TextField(String.join(", ", variable.getEnum()));
         enumField.getStyleClass().add(VARIABLE_ENUM_CLASS);
         enumField.setPromptText("allowed values, comma separated");
-        enumField.textProperty().addListener((obs, oldVal, newVal) -> variable.setEnum(splitValues(newVal)));
+        enumField.textProperty().addListener((obs, oldVal, newVal) -> variable.setEnum(FormFields.commaSeparated(newVal)));
         HBox.setHgrow(enumField, Priority.ALWAYS);
 
         TextField descriptionField = FormFields.boundTextField(variable.getDescription(), "description", null,
@@ -172,11 +169,6 @@ final class ServersEditor {
                 removeVariable(variables, name, onChanged));
         row.setAlignment(Pos.CENTER_LEFT);
         return row;
-    }
-
-    private static List<String> splitValues(String text) {
-        return text == null || text.isBlank() ? List.of()
-                : Arrays.stream(text.split("\\s*,\\s*")).filter(v -> !v.isEmpty()).toList();
     }
 
     private static HBox addVariableRow(ServerVariables variables, Runnable onChanged) {
