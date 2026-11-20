@@ -93,12 +93,12 @@ class DocumentRoundTripTest {
 
     /** Component responses and references to them, built through the facade, round-trip in order. */
     @Test
-    void componentResponsesBuiltThroughTheFacadeRoundTripInYaml() throws IOException {
+    void componentResponsesBuiltThroughTheFacadeRoundTripInYaml() {
         assertComponentResponsesRoundTrip(DocumentFormat.YAML);
     }
 
     @Test
-    void componentResponsesBuiltThroughTheFacadeRoundTripInJson() throws IOException {
+    void componentResponsesBuiltThroughTheFacadeRoundTripInJson() {
         assertComponentResponsesRoundTrip(DocumentFormat.JSON);
     }
 
@@ -121,12 +121,12 @@ class DocumentRoundTripTest {
 
     /** Component parameters, path-level parameters and references to both, built through the facade. */
     @Test
-    void parametersBuiltThroughTheFacadeRoundTripInYaml() throws IOException {
+    void parametersBuiltThroughTheFacadeRoundTripInYaml() {
         assertParametersRoundTrip(DocumentFormat.YAML);
     }
 
     @Test
-    void parametersBuiltThroughTheFacadeRoundTripInJson() throws IOException {
+    void parametersBuiltThroughTheFacadeRoundTripInJson() {
         assertParametersRoundTrip(DocumentFormat.JSON);
     }
 
@@ -153,12 +153,12 @@ class DocumentRoundTripTest {
 
     /** Several media types with schemas and examples, and a component example referenced from one. */
     @Test
-    void mediaTypesAndExamplesBuiltThroughTheFacadeRoundTripInYaml() throws IOException {
+    void mediaTypesAndExamplesBuiltThroughTheFacadeRoundTripInYaml() {
         assertMediaTypesRoundTrip(DocumentFormat.YAML);
     }
 
     @Test
-    void mediaTypesAndExamplesBuiltThroughTheFacadeRoundTripInJson() throws IOException {
+    void mediaTypesAndExamplesBuiltThroughTheFacadeRoundTripInJson() {
         assertMediaTypesRoundTrip(DocumentFormat.JSON);
     }
 
@@ -189,12 +189,12 @@ class DocumentRoundTripTest {
 
     /** Root tags and an operation's own tags, built through the facade, round-trip in order. */
     @Test
-    void tagsRoundTripInYaml() throws IOException {
+    void tagsRoundTripInYaml() {
         assertTagsRoundTrip(DocumentFormat.YAML);
     }
 
     @Test
-    void tagsRoundTripInJson() throws IOException {
+    void tagsRoundTripInJson() {
         assertTagsRoundTrip(DocumentFormat.JSON);
     }
 
