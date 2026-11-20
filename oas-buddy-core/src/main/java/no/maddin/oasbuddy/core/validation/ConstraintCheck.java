@@ -3,6 +3,7 @@ package no.maddin.oasbuddy.core.validation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import no.maddin.oasbuddy.core.document.OasVersion;
 import no.maddin.oasbuddy.core.model.Constraint;
 
 import java.util.ArrayList;
@@ -20,6 +21,12 @@ import java.util.stream.Stream;
  *
  * <p>Schemas are found by where OAS puts them rather than by looking for the keywords anywhere:
  * a property may well be <em>named</em> {@code minLength}, and that is not a constraint.
+ *
+ * <p>Reusable schemas live under {@code components.schemas} in 3.x and under {@code definitions} in
+ * Swagger 2.0; everywhere else both versions reach a schema through a {@code schema} key.
+ *
+ * <p>Not run for 3.1 yet: {@link Constraint} states the 3.0 rules, under which 3.1's numeric
+ * {@code exclusiveMinimum}/{@code exclusiveMaximum} would be reported as errors.
  */
 final class ConstraintCheck {
 
@@ -33,15 +40,23 @@ final class ConstraintCheck {
     private static final Set<String> DATA = Stream.concat(Check.DATA_FIELDS.stream(), Stream.of("examples"))
             .collect(Collectors.toUnmodifiableSet());
 
+    /** Where Swagger 2.0 keeps its reusable schemas; no 3.x document has this root key. */
+    private static final String DEFINITIONS = "definitions";
+
     private ConstraintCheck() {
     }
 
-    static List<ValidationMessage> check(JsonNode root) {
+    static List<ValidationMessage> check(JsonNode root, OasVersion version) {
         List<ValidationMessage> messages = new ArrayList<>();
-        JsonNode schemas = root.path("components").path("schemas");
+        if (version == OasVersion.V3_1) {
+            return messages;
+        }
+        boolean swagger20 = version == OasVersion.V2_0;
+        JsonNode schemas = swagger20 ? root.path(DEFINITIONS) : root.path("components").path("schemas");
+        String prefix = swagger20 ? DEFINITIONS + "." : "components.schemas.";
         if (schemas instanceof ObjectNode schemaMap) {
             schemaMap.properties().forEach(entry ->
-                    checkSchema(entry.getValue(), "components.schemas." + entry.getKey(), messages));
+                    checkSchema(entry.getValue(), prefix + entry.getKey(), messages));
         }
         findSchemaFields(root, "", messages);
         return messages;
@@ -53,6 +68,9 @@ final class ConstraintCheck {
             for (Map.Entry<String, JsonNode> entry : objectNode.properties()) {
                 String key = entry.getKey();
                 String childLocation = join(location, key);
+                if (location.isEmpty() && key.equals(DEFINITIONS)) {
+                    continue;
+                }
                 if (location.isEmpty() && key.equals("components")) {
                     findSchemaFieldsOutsideComponentSchemas(entry.getValue(), childLocation, messages);
                 } else if (key.equals("schema")) {

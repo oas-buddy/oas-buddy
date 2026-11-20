@@ -3,6 +3,7 @@ package no.maddin.oasbuddy.core.validation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import no.maddin.oasbuddy.core.document.OasVersion;
 import no.maddin.oasbuddy.core.model.HttpMethod;
 
 import java.util.ArrayList;
@@ -31,7 +32,8 @@ final class TagCheck {
     private TagCheck() {
     }
 
-    static List<ValidationMessage> check(JsonNode root) {
+    /** Root {@code tags} and operation {@code tags} have the same shape in every version. */
+    static List<ValidationMessage> check(JsonNode root, OasVersion version) {
         List<ValidationMessage> messages = new ArrayList<>();
         Set<String> defined = definedNames(root);
         if (root.path("paths") instanceof ObjectNode paths) {

@@ -1,6 +1,7 @@
 package no.maddin.oasbuddy.core.validation;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import no.maddin.oasbuddy.core.document.OasVersion;
 
 import java.util.List;
 import java.util.Set;
@@ -16,5 +17,9 @@ interface Check {
      */
     Set<String> DATA_FIELDS = Set.of("example", "default", "enum");
 
-    List<ValidationMessage> check(JsonNode root);
+    /**
+     * @param version the version the document declares, or {@link OasVersion#V3_0} when it declares
+     *                none this editor knows — swagger-parser reports that, and the checks still help
+     */
+    List<ValidationMessage> check(JsonNode root, OasVersion version);
 }
