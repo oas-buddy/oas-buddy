@@ -70,10 +70,8 @@ final class CallbackExpressions {
                              RemovalConfirmation confirmation, OperationEditor operationEditor, Runnable refresh) {
         PathItem pathItem = callback.get(expression);
 
-        TextField nameField = FormFields.renameField(expression, candidate ->
-                callback.expressions().contains(candidate)
-                        ? "An expression \"" + candidate + "\" already exists."
-                        : callback.rename(expression, candidate) ? null : "");
+        TextField nameField = FormFields.renameField(expression, callback::expressions,
+                "An expression \"%s\" already exists.", candidate -> callback.rename(expression, candidate));
         nameField.getStyleClass().add(NAME_CLASS);
         HBox.setHgrow(nameField, Priority.ALWAYS);
         // the card is rebuilt after a rename so its controls act on the new key

@@ -120,10 +120,15 @@ public final class OperationPane {
      * requirement.
      */
     private static void buildSecurity(Operation operation, VBox box, SecuritySchemeCatalog catalog) {
-        SecurityRequirements security = operation.getSecurity();
-        String mode = !security.isDeclared() ? INHERIT_MODE
-                : security.requirements().isEmpty() ? PUBLIC_MODE : REQUIRE_MODE;
-        buildSecurity(operation, box, catalog, mode);
+        buildSecurity(operation, box, catalog, securityMode(operation.getSecurity()));
+    }
+
+    /** The radio choice that matches what the document says: absent, empty or non-empty. */
+    private static String securityMode(SecurityRequirements security) {
+        if (!security.isDeclared()) {
+            return INHERIT_MODE;
+        }
+        return security.requirements().isEmpty() ? PUBLIC_MODE : REQUIRE_MODE;
     }
 
     private static void buildSecurity(Operation operation, VBox box, SecuritySchemeCatalog catalog,

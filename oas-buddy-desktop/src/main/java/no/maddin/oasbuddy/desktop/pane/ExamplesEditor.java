@@ -53,7 +53,7 @@ final class ExamplesEditor extends ReferableList<Example> {
     Node resolved(Example reference) {
         Example component = catalog.example(reference.getReferencedExampleName());
         Label resolved = new Label(component == null ? "(not declared)"
-                : component.getSummary() == null ? "" : component.getSummary());
+                : FormFields.nullToEmpty(component.getSummary()));
         resolved.getStyleClass().add(Styles.TEXT_MUTED);
         return resolved;
     }

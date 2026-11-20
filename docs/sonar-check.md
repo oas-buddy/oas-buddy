@@ -39,6 +39,9 @@ Branch `refactor/sonar-mechanical-2` (commit `7c6a3a2`), not yet pushed. Full su
 
 Ordered from most to least worthwhile.
 
+**Status:** every *medium* (`MAJOR`) finding here — 2a, 2c, 2d, 2e (23, plus the `S9435` on the same
+line as an `S3358`) — is fixed on branch `refactor/sonar-medium`. Only 2b (`S1130`, minor) remains.
+
 ### 2a. Regex with super-linear backtracking — `S8786` (2) — *do this*
 
 The only findings with a possible runtime effect. Both split comma-separated user input with

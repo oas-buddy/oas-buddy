@@ -49,10 +49,12 @@ class SecuritySchemeRemovalTest {
             return false;
         }, () -> { });
 
-        assertEquals(List.of("Remove security scheme \"ApiKeyAuth\"? | Still required by:"
-                + "\n  security → [0]"
-                + "\n  paths → /pets → get → security → [0]"
-                + "\n\nThose requirements will be left dangling."), asked);
+        assertEquals(List.of("""
+                Remove security scheme "ApiKeyAuth"? | Still required by:
+                  security → [0]
+                  paths → /pets → get → security → [0]
+
+                Those requirements will be left dangling."""), asked);
     }
 
     @Test

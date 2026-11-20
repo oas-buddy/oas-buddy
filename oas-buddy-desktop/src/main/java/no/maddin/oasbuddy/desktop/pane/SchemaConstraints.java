@@ -72,16 +72,16 @@ final class SchemaConstraints {
     private Node control(Constraint constraint) {
         JsonNode current = schema.getConstraint(constraint);
         if (constraint.kind() == Constraint.Kind.BOOLEAN) {
-            CheckBox box = new CheckBox();
-            box.getStyleClass().add(styleClass(constraint));
-            box.setSelected(current != null && current.asBoolean());
+            CheckBox checkBox = new CheckBox();
+            checkBox.getStyleClass().add(styleClass(constraint));
+            checkBox.setSelected(current != null && current.asBoolean());
             // false is the default, so it is never written; see Constraint.Kind.BOOLEAN.
-            box.selectedProperty().addListener((obs, oldVal, newVal) ->
+            checkBox.selectedProperty().addListener((obs, oldVal, newVal) ->
                     schema.setConstraint(constraint, newVal ? BooleanNode.TRUE : null));
-            return box;
+            return checkBox;
         }
 
-        TextField field = new TextField(current == null ? "" : current.isTextual() ? current.asText() : current.toString());
+        TextField field = new TextField(display(current));
         field.getStyleClass().add(styleClass(constraint));
         field.textProperty().addListener((obs, oldVal, newVal) -> {
             try {
@@ -99,6 +99,14 @@ final class SchemaConstraints {
 
     static String styleClass(Constraint constraint) {
         return "constraint-" + constraint.key();
+    }
+
+    /** A constraint value as the user typed it: a text value without its JSON quotes. */
+    private static String display(JsonNode value) {
+        if (value == null) {
+            return "";
+        }
+        return value.isTextual() ? value.asText() : value.toString();
     }
 
     private static Label muted(String text) {

@@ -47,9 +47,11 @@ class TagRemovalTest {
             return false;
         }, () -> { });
 
-        assertEquals(List.of("Remove tag \"pets\"? | Still used by:"
-                + "\n  GET /pets"
-                + "\n\nThose operations will be left using an undefined tag."), asked);
+        assertEquals(List.of("""
+                Remove tag "pets"? | Still used by:
+                  GET /pets
+
+                Those operations will be left using an undefined tag."""), asked);
     }
 
     @Test
