@@ -3,6 +3,7 @@ package no.maddin.oasbuddy.core.validation;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import no.maddin.oasbuddy.core.document.OasDocument;
+import no.maddin.oasbuddy.core.document.OasVersion;
 import no.maddin.oasbuddy.core.model.Callbacks;
 import no.maddin.oasbuddy.core.model.ComponentCallbacks;
 import no.maddin.oasbuddy.core.model.ComponentLinks;
@@ -32,8 +33,12 @@ final class LinkCheck {
     private LinkCheck() {
     }
 
-    static List<ValidationMessage> check(JsonNode root) {
+    /** Swagger 2.0 has neither links nor callbacks, so there is nothing to check. */
+    static List<ValidationMessage> check(JsonNode root, OasVersion version) {
         List<ValidationMessage> messages = new ArrayList<>();
+        if (version == OasVersion.V2_0) {
+            return messages;
+        }
         Set<String> ids = new HashSet<>();
         JsonNode paths = root.path(OasDocument.PATHS);
         collectIds(paths, ids);
