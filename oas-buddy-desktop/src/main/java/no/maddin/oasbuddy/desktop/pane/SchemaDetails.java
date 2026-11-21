@@ -18,13 +18,16 @@ import no.maddin.oasbuddy.core.model.SchemaValues;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 /**
  * The value-level and descriptive fields of a schema — enum, default, example and the four
- * boolean flags — shared by the schema pane and each property's details row.
+ * boolean flags — shared by the schema pane and each property's details row. OAS 3.1's
+ * {@code const} and {@code examples} are offered for a 3.1 document, and shown for any other
+ * document that already carries them, so the form never hides what is in the file.
  *
  * <p>The controls are marked with style classes rather than ids: a pane can show several of these
  * editors at once, one per expanded property, and a property name must never become part of a node
@@ -34,10 +37,13 @@ final class SchemaDetails {
 
     static final String DEFAULT = "schema-default";
     static final String EXAMPLE = "schema-example";
+    static final String CONST = "schema-const";
     static final String ENUM = "schema-enum";
-    static final String ENUM_INPUT = "schema-enum-input";
+    static final String ENUM_INPUT = ENUM + "-input";
+    static final String EXAMPLES = "schema-examples";
+    static final String EXAMPLES_INPUT = EXAMPLES + "-input";
 
-    private static final double ENUM_LIST_HEIGHT = 120;
+    private static final double VALUE_LIST_HEIGHT = 120;
 
     private SchemaDetails() {
     }
@@ -57,7 +63,15 @@ final class SchemaDetails {
         }
         valueRow(grid, row++, "Default", DEFAULT, schema, schema::getDefault, schema::setDefault);
         valueRow(grid, row++, "Example", EXAMPLE, schema, schema::getExample, schema::setExample);
-        grid.addRow(row++, new Label("Enum"), enumEditor(schema));
+        boolean v31 = version == OasVersion.V3_1;
+        if (v31 || !schema.getExamples().isEmpty()) {
+            grid.addRow(row++, new Label("Examples"),
+                    valueList(EXAMPLES, schema, schema::getExamples, schema::setExamples));
+        }
+        grid.addRow(row++, new Label("Enum"), valueList(ENUM, schema, schema::getEnum, schema::setEnum));
+        if (v31 || schema.getConst() != null) {
+            valueRow(grid, row++, "Const", CONST, schema, schema::getConst, schema::setConst);
+        }
         grid.addRow(row, new Label("Flags"), flags(schema, version));
         return grid;
     }
@@ -73,10 +87,16 @@ final class SchemaDetails {
         grid.addRow(row, new Label(label), field);
     }
 
-    private static Node enumEditor(Schema schema) {
+    /**
+     * An ordered list of typed values — {@code enum}, {@code examples} — with add, reorder and remove.
+     * Its controls carry style classes derived from {@code styleClass}: the list itself, the input
+     * ({@code -input}) and each button ({@code -add}, {@code -up}, …).
+     */
+    private static Node valueList(String styleClass, Schema schema, Supplier<List<JsonNode>> getter,
+                                  Consumer<List<JsonNode>> setter) {
         ListView<JsonNode> values = new ListView<>();
-        values.getStyleClass().add(ENUM);
-        values.setPrefHeight(ENUM_LIST_HEIGHT);
+        values.getStyleClass().add(styleClass);
+        values.setPrefHeight(VALUE_LIST_HEIGHT);
         values.setCellFactory(list -> new ListCell<>() {
             @Override
             protected void updateItem(JsonNode item, boolean empty) {
@@ -84,11 +104,11 @@ final class SchemaDetails {
                 setText(empty || item == null ? null : SchemaValues.display(item));
             }
         });
-        values.getItems().setAll(schema.getEnum());
-        Runnable write = () -> schema.setEnum(new ArrayList<>(values.getItems()));
+        values.getItems().setAll(getter.get());
+        Runnable write = () -> setter.accept(new ArrayList<>(values.getItems()));
 
         TextField input = new TextField();
-        input.getStyleClass().add(ENUM_INPUT);
+        input.getStyleClass().add(styleClass + "-input");
         input.setPromptText("value");
         Runnable add = () -> {
             JsonNode value = SchemaValues.parse(input.getText(), schema.getType());
@@ -100,17 +120,17 @@ final class SchemaDetails {
         };
         input.setOnAction(e -> add.run());
 
-        Button addButton = button("Add", add);
-        Button upButton = button("Up", () -> move(values, -1, write));
-        Button downButton = button("Down", () -> move(values, 1, write));
-        Button removeButton = button("Remove", () -> {
+        Button addButton = button(styleClass, "Add", add);
+        Button upButton = button(styleClass, "Up", () -> move(values, -1, write));
+        Button downButton = button(styleClass, "Down", () -> move(values, 1, write));
+        Button removeButton = button(styleClass, "Remove", () -> {
             int index = values.getSelectionModel().getSelectedIndex();
             if (index >= 0) {
                 values.getItems().remove(index);
                 write.run();
             }
         });
-        Button clearButton = button("Clear", () -> {
+        Button clearButton = button(styleClass, "Clear", () -> {
             values.getItems().clear();
             write.run();
         });
@@ -148,9 +168,9 @@ final class SchemaDetails {
         return box;
     }
 
-    private static Button button(String text, Runnable action) {
+    private static Button button(String styleClass, String text, Runnable action) {
         Button button = new Button(text);
-        button.getStyleClass().add("schema-enum-" + text.toLowerCase());
+        button.getStyleClass().add(styleClass + "-" + text.toLowerCase(Locale.ROOT));
         button.setOnAction(e -> action.run());
         return button;
     }
