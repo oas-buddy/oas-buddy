@@ -1,29 +1,49 @@
 package no.maddin.oasbuddy.core.model;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import no.maddin.oasbuddy.core.document.JsonNodes;
 
+/**
+ * {@code info.license}. Taken through {@code info} so reading never adds an empty {@code license},
+ * and clearing every field removes it again; see {@link OptionalObject}.
+ *
+ * <p>{@code identifier} (an SPDX expression) exists in OAS 3.1 only, and is mutually exclusive with
+ * {@code url} there. Both are editable; a document carrying both, or an identifier in 3.0, is left
+ * for validation to report rather than repaired here.
+ */
 public final class License {
 
-    private final ObjectNode node;
+    private final OptionalObject object;
 
-    public License(ObjectNode node) {
-        this.node = node;
+    License(ObjectNode info) {
+        this.object = new OptionalObject(info, "license");
+    }
+
+    public boolean isEditable() {
+        return object.isEditable();
     }
 
     public String getName() {
-        return JsonNodes.text(node, "name");
+        return object.read("name");
     }
 
     public void setName(String name) {
-        JsonNodes.setText(node, "name", name);
+        object.write("name", name);
     }
 
     public String getUrl() {
-        return JsonNodes.text(node, "url");
+        return object.read("url");
     }
 
     public void setUrl(String url) {
-        JsonNodes.setText(node, "url", url);
+        object.write("url", url);
+    }
+
+    /** OAS 3.1: the license as an SPDX expression. */
+    public String getIdentifier() {
+        return object.read("identifier");
+    }
+
+    public void setIdentifier(String identifier) {
+        object.write("identifier", identifier);
     }
 }

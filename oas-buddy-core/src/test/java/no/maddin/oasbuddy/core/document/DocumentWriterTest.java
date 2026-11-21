@@ -11,6 +11,7 @@ import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class DocumentWriterTest {
@@ -20,6 +21,19 @@ class DocumentWriterTest {
 
     @TempDir
     Path tempDir;
+
+    @Test
+    void aSwagger2DocumentIsNeverWritten() throws IOException {
+        OasDocument swagger = DocumentReader.read("swagger: '2.0'\ninfo: {title: t, version: '1'}\npaths: {}\n",
+                DocumentFormat.YAML);
+        Path existing = tempDir.resolve("api.json");
+        Files.writeString(existing, "untouched");
+
+        assertThrows(UnsupportedOperationException.class, () -> DocumentWriter.write(swagger));
+        assertThrows(UnsupportedOperationException.class, () -> DocumentWriter.write(swagger, existing));
+        assertEquals("untouched", Files.readString(existing), "the file must not be touched");
+        assertEquals(DocumentFormat.YAML, swagger.getFormat(), "a refused save must not change the format");
+    }
 
     @Test
     void jsonKeysAreFollowedByASpaceButNotPrecededByOne() {

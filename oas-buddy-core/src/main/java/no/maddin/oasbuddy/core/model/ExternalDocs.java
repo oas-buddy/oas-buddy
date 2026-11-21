@@ -1,8 +1,6 @@
 package no.maddin.oasbuddy.core.model;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import no.maddin.oasbuddy.core.document.JsonNodes;
 
 /**
  * The {@code externalDocs} object that can hang off the document root, a tag, an operation and a
@@ -19,52 +17,30 @@ import no.maddin.oasbuddy.core.document.JsonNodes;
  */
 public final class ExternalDocs {
 
-    private static final String FIELD = "externalDocs";
-
-    private final ObjectNode parent;
+    private final OptionalObject object;
 
     public ExternalDocs(ObjectNode parent) {
-        this.parent = parent;
+        this.object = new OptionalObject(parent, "externalDocs");
     }
 
     /** {@code false} when the key holds something other than an object; see the class comment. */
     public boolean isEditable() {
-        JsonNode existing = parent.get(FIELD);
-        return existing == null || existing instanceof ObjectNode;
+        return object.isEditable();
     }
 
     public String getDescription() {
-        return read("description");
+        return object.read("description");
     }
 
     public void setDescription(String description) {
-        write("description", description);
+        object.write("description", description);
     }
 
     public String getUrl() {
-        return read("url");
+        return object.read("url");
     }
 
     public void setUrl(String url) {
-        write("url", url);
-    }
-
-    private String read(String field) {
-        return parent.get(FIELD) instanceof ObjectNode node ? JsonNodes.text(node, field) : null;
-    }
-
-    private void write(String field, String value) {
-        if (!isEditable()) {
-            return;
-        }
-        String text = value == null || value.isBlank() ? null : value;
-        if (parent.get(FIELD) instanceof ObjectNode node) {
-            JsonNodes.setText(node, field, text);
-            if (node.isEmpty()) {
-                parent.remove(FIELD);
-            }
-        } else if (text != null) {
-            JsonNodes.setText(JsonNodes.objectChild(parent, FIELD), field, text);
-        }
+        object.write("url", url);
     }
 }

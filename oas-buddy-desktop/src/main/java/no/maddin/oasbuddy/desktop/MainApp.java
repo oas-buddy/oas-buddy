@@ -292,7 +292,7 @@ public class MainApp extends Application {
         try {
             DocumentWriter.write(document, file);
             runValidation();
-        } catch (IOException e) {
+        } catch (IOException | UnsupportedOperationException e) {
             showError("Could not save file", e.getMessage());
         }
     }

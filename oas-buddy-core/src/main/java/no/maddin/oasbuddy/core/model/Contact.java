@@ -1,37 +1,44 @@
 package no.maddin.oasbuddy.core.model;
 
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import no.maddin.oasbuddy.core.document.JsonNodes;
 
+/**
+ * {@code info.contact}. Taken through {@code info} so reading never adds an empty {@code contact},
+ * and clearing every field removes it again; see {@link OptionalObject}.
+ */
 public final class Contact {
 
-    private final ObjectNode node;
+    private final OptionalObject object;
 
-    public Contact(ObjectNode node) {
-        this.node = node;
+    Contact(ObjectNode info) {
+        this.object = new OptionalObject(info, "contact");
+    }
+
+    public boolean isEditable() {
+        return object.isEditable();
     }
 
     public String getName() {
-        return JsonNodes.text(node, "name");
+        return object.read("name");
     }
 
     public void setName(String name) {
-        JsonNodes.setText(node, "name", name);
+        object.write("name", name);
     }
 
     public String getUrl() {
-        return JsonNodes.text(node, "url");
+        return object.read("url");
     }
 
     public void setUrl(String url) {
-        JsonNodes.setText(node, "url", url);
+        object.write("url", url);
     }
 
     public String getEmail() {
-        return JsonNodes.text(node, "email");
+        return object.read("email");
     }
 
     public void setEmail(String email) {
-        JsonNodes.setText(node, "email", email);
+        object.write("email", email);
     }
 }
