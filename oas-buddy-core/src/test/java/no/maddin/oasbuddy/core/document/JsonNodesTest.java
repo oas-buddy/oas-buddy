@@ -13,7 +13,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-/** {@link JsonNodes#renameField} and {@link JsonNodes#setAfter}: changing fields without moving the others. */
+/** {@link JsonNodes#renameField}, {@link JsonNodes#setAfter}, {@link JsonNodes#replaceFields}: changing fields without moving the others. */
 class JsonNodesTest {
 
     @Test
@@ -132,6 +132,25 @@ class JsonNodesTest {
 
         JsonNodes.setAfter(node, "missing", "z", JsonNodeFactory.instance.nullNode());
         assertFieldOrder(node, "a", "c", "b", "z");
+    }
+
+    @Test
+    void replaceFieldsPutsTheNewFieldWhereTheFirstReplacedOneStood() {
+        ObjectNode node = objectOf("a", "host", "b", "schemes", "c");
+
+        JsonNodes.replaceFields(node, List.of("schemes", "host", "basePath"), "servers",
+                JsonNodeFactory.instance.arrayNode());
+
+        assertFieldOrder(node, "a", "servers", "b", "c");
+    }
+
+    @Test
+    void replaceFieldsAppendsWhenNoneOfTheFieldsIsPresent() {
+        ObjectNode node = objectOf("a", "b");
+
+        JsonNodes.replaceFields(node, List.of("x", "y"), "z", JsonNodeFactory.instance.nullNode());
+
+        assertFieldOrder(node, "a", "b", "z");
     }
 
     private static void assertFieldOrder(ObjectNode node, String... expectedOrder) {

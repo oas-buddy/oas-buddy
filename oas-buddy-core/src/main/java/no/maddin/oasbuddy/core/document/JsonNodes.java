@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -128,6 +129,32 @@ public final class JsonNodes {
             if (name.equals(after)) {
                 entries.add(Map.entry(field, value));
             }
+        }
+        parent.removeAll();
+        entries.forEach(entry -> parent.set(entry.getKey(), entry.getValue()));
+    }
+
+    /**
+     * Replaces {@code fields} with the single field {@code field}, set to {@code value} at the
+     * position of the first of them present — for a conversion that folds several keys into one
+     * ({@code host}, {@code basePath}, {@code schemes} into {@code servers}). Every other field keeps
+     * its position. When none of {@code fields} is present, {@code field} is appended.
+     */
+    public static void replaceFields(ObjectNode parent, Collection<String> fields, String field, JsonNode value) {
+        List<Map.Entry<String, JsonNode>> entries = new ArrayList<>();
+        boolean placed = false;
+        for (String name : fieldNames(parent)) {
+            if (fields.contains(name)) {
+                if (!placed) {
+                    entries.add(Map.entry(field, value));
+                    placed = true;
+                }
+            } else if (!name.equals(field)) {
+                entries.add(Map.entry(name, parent.get(name)));
+            }
+        }
+        if (!placed) {
+            entries.add(Map.entry(field, value));
         }
         parent.removeAll();
         entries.forEach(entry -> parent.set(entry.getKey(), entry.getValue()));
