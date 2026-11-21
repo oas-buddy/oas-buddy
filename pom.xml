@@ -64,6 +64,7 @@
     <slf4j.version>2.0.9</slf4j.version>
     <javafx.version>25.0.4</javafx.version>
     <testfx.version>4.0.18</testfx.version>
+    <ec4j.version>1.2.0</ec4j.version>
 
     <jacoco.version>0.8.16</jacoco.version>
     <sonar-maven-plugin.version>5.8.0.7211</sonar-maven-plugin.version>
@@ -108,6 +109,13 @@
         <groupId>io.swagger.parser.v3</groupId>
         <artifactId>swagger-parser</artifactId>
         <version>${swagger-parser.version}</version>
+      </dependency>
+      <!-- Reads .editorconfig (glob matching, section precedence, root = true) for the formatting
+           a document is written with; see core.document.EditorConfigFormat. -->
+      <dependency>
+        <groupId>org.ec4j.core</groupId>
+        <artifactId>ec4j-core</artifactId>
+        <version>${ec4j.version}</version>
       </dependency>
       <dependency>
         <groupId>no.maddin.oasbuddy</groupId>
