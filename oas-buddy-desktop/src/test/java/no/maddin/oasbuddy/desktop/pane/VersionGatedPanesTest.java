@@ -1,6 +1,7 @@
 package no.maddin.oasbuddy.desktop.pane;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.IntNode;
 import no.maddin.oasbuddy.core.document.DocumentFormat;
 import no.maddin.oasbuddy.core.document.OasDocument;
 import no.maddin.oasbuddy.core.document.OasVersion;
@@ -113,6 +114,75 @@ class VersionGatedPanesTest extends ApplicationTest {
         JsonNode bound = raw(document).get("exclusiveMinimum");
         assertTrue(bound.isNumber(), bound::toString);
         assertEquals(0, bound.intValue());
+    }
+
+    @Test
+    void a30SchemaIsNotOfferedConstOrExamples() {
+        showSchema(withNumberSchema(OasVersion.V3_0));
+
+        List<String> labels = valueLabels();
+        assertFalse(labels.contains("Const"), labels::toString);
+        assertFalse(labels.contains("Examples"), labels::toString);
+    }
+
+    @Test
+    void a31SchemaEditsConstAsATypedValue() {
+        OasDocument document = withNumberSchema(OasVersion.V3_1);
+        showSchema(document);
+        TextField constant = values().lookup("." + SchemaDetails.CONST).queryAs(TextField.class);
+
+        interact(() -> constant.setText("42"));
+        assertEquals(42, raw(document).get("const").intValue());
+
+        interact(() -> constant.setText(""));
+        assertFalse(raw(document).has("const"), "clearing the field removes the key");
+    }
+
+    @Test
+    void a31SchemaEditsExamplesAsAnOrderedList() {
+        OasDocument document = withNumberSchema(OasVersion.V3_1);
+        showSchema(document);
+
+        addExample("1.5");
+        addExample("2");
+        interact(() -> {
+            values().lookup("." + SchemaDetails.EXAMPLES).queryListView().getSelectionModel().select(1);
+            values().lookup("." + SchemaDetails.EXAMPLES + "-up").queryButton().fire();
+        });
+
+        assertEquals("[2,1.5]", raw(document).get("examples").toString());
+
+        interact(() -> values().lookup("." + SchemaDetails.EXAMPLES + "-clear").queryButton().fire());
+        assertFalse(raw(document).has("examples"), "an empty list removes the key");
+    }
+
+    /** The form never hides what is in the file: a 3.0 schema carrying const or examples shows them. */
+    @Test
+    void a30SchemaThatAlreadyCarriesConstAndExamplesShowsThem() {
+        OasDocument document = withNumberSchema(OasVersion.V3_0);
+        var code = document.getComponents().getSchemas().getSchema("Code");
+        code.setConst(IntNode.valueOf(7));
+        code.setExamples(List.of(IntNode.valueOf(1)));
+
+        showSchema(document);
+
+        assertEquals("7", values().lookup("." + SchemaDetails.CONST).queryAs(TextField.class).getText());
+        assertEquals(1, values().lookup("." + SchemaDetails.EXAMPLES).queryListView().getItems().size());
+    }
+
+    private void addExample(String text) {
+        interact(() -> {
+            values().lookup("." + SchemaDetails.EXAMPLES_INPUT).queryAs(TextField.class).setText(text);
+            values().lookup("." + SchemaDetails.EXAMPLES + "-add").queryButton().fire();
+        });
+    }
+
+    private NodeQuery values() {
+        return from(lookup("#schema-values").<Node>query());
+    }
+
+    private List<String> valueLabels() {
+        return values().lookup(".label").queryAll().stream().map(node -> ((Label) node).getText()).toList();
     }
 
     private static OasDocument withStringSchema(OasVersion version) {

@@ -10,6 +10,7 @@ import no.maddin.oasbuddy.core.document.OasVersion;
 import no.maddin.oasbuddy.core.model.HttpMethod;
 import no.maddin.oasbuddy.core.model.Operation;
 import no.maddin.oasbuddy.core.model.PathItem;
+import no.maddin.oasbuddy.core.model.Webhooks;
 import no.maddin.oasbuddy.core.validation.OasValidator;
 import no.maddin.oasbuddy.core.validation.ValidationMessage;
 import no.maddin.oasbuddy.core.validation.ValidationSeverity;
@@ -47,6 +48,7 @@ import no.maddin.oasbuddy.desktop.pane.ServersPane;
 import no.maddin.oasbuddy.desktop.pane.TagCatalog;
 import no.maddin.oasbuddy.desktop.pane.TagRemoval;
 import no.maddin.oasbuddy.desktop.pane.TagsPane;
+import no.maddin.oasbuddy.desktop.pane.WebhooksPane;
 import atlantafx.base.theme.PrimerDark;
 import atlantafx.base.theme.PrimerLight;
 import atlantafx.base.theme.Styles;
@@ -101,6 +103,7 @@ public class MainApp extends Application {
     /** Outline labels, also the keys {@link #refreshAndSelect} finds a node by. */
     private static final String SCHEMAS = "Schemas";
     private static final String PATHS = "Paths";
+    private static final String WEBHOOKS = "Webhooks";
 
     private final OasValidator validator = new OasValidator();
     private final OasConverter converter = OasConverter.standard();
@@ -420,6 +423,13 @@ public class MainApp extends Application {
             pathsItem.getChildren().add(pathNode);
         }
         root.getChildren().add(pathsItem);
+        if (showsWebhooks()) {
+            root.getChildren().add(section(WEBHOOKS,
+                    () -> WebhooksPane.list(document, this::refreshOutline, this::removeWebhook),
+                    document.getWebhooks().names(),
+                    name -> WebhooksPane.item(document, name, this::renameWebhook, replaceConfirmation,
+                            () -> removeWebhook(name), () -> refreshAndSelect(WEBHOOKS, name))));
+        }
 
         root.getChildren().add(section(SCHEMAS,
                 () -> SchemasPane.build(document, this::refreshOutline, this::removeSchema),
@@ -512,6 +522,24 @@ public class MainApp extends Application {
     private void removeSecurityScheme(String schemeName) {
         SecuritySchemeRemoval.remove(document, schemeName, confirmation,
                 () -> refreshAndSelect("Security Schemes"));
+    }
+
+    /** Webhooks exist in OAS 3.1; another document shows them only if it carries the key anyway. */
+    private boolean showsWebhooks() {
+        return document.getVersion().orElse(null) == OasVersion.V3_1
+                || document.getRoot().has(Webhooks.FIELD);
+    }
+
+    private boolean renameWebhook(String from, String to) {
+        boolean renamed = document.getWebhooks().rename(from, to);
+        if (renamed) {
+            refreshAndSelect(WEBHOOKS, to);
+        }
+        return renamed;
+    }
+
+    private void removeWebhook(String name) {
+        WebhooksPane.remove(document, name, confirmation, () -> refreshAndSelect(WEBHOOKS));
     }
 
     private void removePath(String path) {
