@@ -1,0 +1,70 @@
+openapi: 3.0.3
+info:
+  title: Nullable and bounds
+  version: 1.0.0
+paths:
+  /pets:
+    get:
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            nullable: true
+            minimum: 1
+            exclusiveMinimum: false
+            maximum: 100
+            exclusiveMaximum: true
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Pet'
+              example:
+                nullable: true
+                exclusiveMinimum: true
+      callbacks:
+        onEvent:
+          '{$request.query.url}':
+            post:
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      type: string
+                      nullable: true
+              responses:
+                '200':
+                  description: ok
+components:
+  schemas:
+    Pet:
+      type: object
+      required:
+        - id
+      properties:
+        id:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        tag:
+          type: string
+          nullable: true
+          default: null
+        nullable:
+          type: boolean
+          description: a property that happens to be named nullable
+        weight:
+          type: number
+          nullable: false
+          exclusiveMaximum: true
+        owner:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Owner'
+    Owner:
+      type: object
