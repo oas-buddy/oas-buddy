@@ -16,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 
 /**
  * Swagger 2.0 → OAS 3.0: the import. 2.0 is never written, so there is no step back, and nothing
@@ -164,37 +165,41 @@ public final class Swagger20To30 implements ConversionStep {
             if (bodies.isEmpty() && pathBody != null) {
                 bodies.add(pathBody);
             }
-
-            ObjectNode requestBody = null;
-            if (!bodies.isEmpty()) {
-                requestBody = requestBody(bodies.getFirst(), requestTypes);
-                keepAside(operation, bodies.subList(1, bodies.size()), location,
-                        "OAS 3.0 allows one request body; this operation has several body parameters");
-                keepAside(operation, new ArrayList<>(forms.values()), location,
-                        "a body parameter and formData parameters cannot both describe the request body");
-            } else if (!forms.isEmpty()) {
-                requestBody = formBody(forms, requestTypes, Kept.append(location, PARAMETERS));
-            }
+            ObjectNode requestBody = requestBodyOf(operation, location, bodies, forms, requestTypes);
             if (requestBody != null) {
                 placeRequestBody(operation, requestBody);
             }
-
             if (operation.get(RESPONSES) instanceof ObjectNode responses) {
-                for (String code : JsonNodes.fieldNames(responses)) {
-                    if (!code.startsWith("x-") && responses.get(code) instanceof ObjectNode response) {
-                        convertResponse(response, responseTypes, Kept.append(location, RESPONSES, code));
-                    }
-                }
+                eachObject(responses, (code, response) ->
+                        convertResponse(response, responseTypes, Kept.append(location, RESPONSES, code)));
             }
             operation.remove(List.of(CONSUMES, PRODUCES));
-            if (operation.has(SCHEMES)) {
-                ArrayNode servers = servers(texts(operation.get(SCHEMES)));
-                if (servers == null) {
-                    Kept.setAside(operation, SCHEMES, location, "schemes without a host form no server url",
-                            null, conflicts);
-                } else {
-                    JsonNodes.replaceFields(operation, List.of(SCHEMES), SERVERS, servers);
-                }
+            convertOperationSchemes(operation, location);
+        }
+
+        /** The operation's request body: its body parameter, or else its form fields; {@code null} for neither. */
+        private ObjectNode requestBodyOf(ObjectNode operation, List<String> location, List<ObjectNode> bodies,
+                                         Map<String, ObjectNode> forms, List<String> requestTypes) {
+            if (bodies.isEmpty()) {
+                return forms.isEmpty() ? null : formBody(forms, requestTypes, Kept.append(location, PARAMETERS));
+            }
+            keepAside(operation, bodies.subList(1, bodies.size()), location,
+                    "OAS 3.0 allows one request body; this operation has several body parameters");
+            keepAside(operation, new ArrayList<>(forms.values()), location,
+                    "a body parameter and formData parameters cannot both describe the request body");
+            return requestBody(bodies.getFirst(), requestTypes);
+        }
+
+        private void convertOperationSchemes(ObjectNode operation, List<String> location) {
+            if (!operation.has(SCHEMES)) {
+                return;
+            }
+            ArrayNode servers = servers(texts(operation.get(SCHEMES)));
+            if (servers == null) {
+                Kept.setAside(operation, SCHEMES, location, "schemes without a host form no server url",
+                        null, conflicts);
+            } else {
+                JsonNodes.replaceFields(operation, List.of(SCHEMES), SERVERS, servers);
             }
         }
 
@@ -209,27 +214,9 @@ public final class Swagger20To30 implements ConversionStep {
             }
             List<Integer> taken = new ArrayList<>();
             for (int i = 0; i < parameters.size(); i++) {
-                if (!(parameters.get(i) instanceof ObjectNode parameter)) {
-                    continue;
-                }
-                String globalName = globalName(parameter);
-                ObjectNode global = globalName == null ? null : JsonNodes.objectOrNull(globalParameters.get(globalName));
-                ObjectNode resolved = global != null ? global : parameter;
-                switch (resolved.path("in").asText()) {
-                    case "body" -> {
-                        bodies.add(global != null ? refTo("requestBodies", globalName) : parameter);
-                        taken.add(i);
-                    }
-                    case "formData" -> {
-                        forms.put(resolved.path("name").asText(), resolved.deepCopy());
-                        taken.add(i);
-                    }
-                    default -> {
-                        if (!parameter.has(REF)) {
-                            Swagger20Parameters.convertParameter(parameter, Kept.append(location, "[" + i + "]"),
-                                    conflicts);
-                        }
-                    }
+                if (parameters.get(i) instanceof ObjectNode parameter
+                        && takeParameter(parameter, Kept.append(location, "[" + i + "]"), bodies, forms)) {
+                    taken.add(i);
                 }
             }
             for (int i = taken.size() - 1; i >= 0; i--) {
@@ -238,6 +225,28 @@ public final class Swagger20To30 implements ConversionStep {
             if (parameters.isEmpty()) {
                 owner.remove(PARAMETERS);
             }
+        }
+
+        /**
+         * Collects a body or formData parameter, resolving a reference to a global one, and returns
+         * {@code true} for those; converts any other parameter in place and returns {@code false}.
+         */
+        private boolean takeParameter(ObjectNode parameter, List<String> location, List<ObjectNode> bodies,
+                                      Map<String, ObjectNode> forms) {
+            String globalName = globalName(parameter);
+            ObjectNode global = globalName == null ? null : JsonNodes.objectOrNull(globalParameters.get(globalName));
+            ObjectNode resolved = global != null ? global : parameter;
+            switch (resolved.path("in").asText()) {
+                case "body" -> bodies.add(global != null ? refTo("requestBodies", globalName) : parameter);
+                case "formData" -> forms.put(resolved.path("name").asText(), resolved.deepCopy());
+                default -> {
+                    if (!parameter.has(REF)) {
+                        Swagger20Parameters.convertParameter(parameter, location, conflicts);
+                    }
+                    return false;
+                }
+            }
+            return true;
         }
 
         /** A 3.0 request body from a 2.0 body parameter (or the reference standing for a global one). */
@@ -367,17 +376,20 @@ public final class Swagger20To30 implements ConversionStep {
                 return;
             }
             if (response.get("headers") instanceof ObjectNode headers) {
-                for (String name : JsonNodes.fieldNames(headers)) {
-                    if (headers.get(name) instanceof ObjectNode header) {
-                        Swagger20Parameters.convertHeader(header, Kept.append(location, "headers", name), conflicts);
-                    }
-                }
+                eachObject(headers, (name, header) ->
+                        Swagger20Parameters.convertHeader(header, Kept.append(location, "headers", name), conflicts));
             }
             JsonNode schema = response.get("schema");
             JsonNode examples = response.get("examples");
             if (schema == null && !(examples instanceof ObjectNode)) {
                 return;
             }
+            ObjectNode content = responseContent(schema, examples, responseTypes);
+            JsonNodes.replaceFields(response, List.of("schema", "examples"), CONTENT, content);
+        }
+
+        /** A media type per produced type carrying the schema, plus each example under its media type. */
+        private ObjectNode responseContent(JsonNode schema, JsonNode examples, List<String> responseTypes) {
             ObjectNode content = JsonNodeFactory.instance.objectNode();
             if (schema != null) {
                 for (String mediaType : responseTypes(responseTypes)) {
@@ -394,7 +406,7 @@ public final class Swagger20To30 implements ConversionStep {
                     entry.set("example", byMediaType.get(mediaType));
                 }
             }
-            JsonNodes.replaceFields(response, List.of("schema", "examples"), CONTENT, content);
+            return content;
         }
 
         /** {@code components}, in place of the first 2.0 section it replaces, its sections in document order. */
@@ -402,37 +414,34 @@ public final class Swagger20To30 implements ConversionStep {
             List<String> sources = List.of(DEFINITIONS, PARAMETERS, RESPONSES, SECURITY_DEFINITIONS);
             ObjectNode components = JsonNodeFactory.instance.objectNode();
             for (String key : JsonNodes.fieldNames(root)) {
-                if (!(root.get(key) instanceof ObjectNode section)) {
-                    continue;
-                }
-                switch (key) {
-                    case DEFINITIONS -> components.set("schemas", section);
-                    case PARAMETERS -> componentParameters(section, components);
-                    case RESPONSES -> {
-                        for (String name : JsonNodes.fieldNames(section)) {
-                            if (section.get(name) instanceof ObjectNode response) {
-                                convertResponse(response, produces, List.of(RESPONSES, name));
-                            }
-                        }
-                        components.set(RESPONSES, section);
-                    }
-                    case SECURITY_DEFINITIONS -> {
-                        for (String name : JsonNodes.fieldNames(section)) {
-                            if (section.get(name) instanceof ObjectNode scheme) {
-                                convertSecurityScheme(scheme, List.of(SECURITY_DEFINITIONS, name));
-                            }
-                        }
-                        components.set("securitySchemes", section);
-                    }
-                    default -> {
-                        // not a section 2.0 keeps reusable things in
-                    }
+                if (root.get(key) instanceof ObjectNode section) {
+                    addComponentSection(key, section, components);
                 }
             }
             if (components.isEmpty()) {
                 root.remove(sources);
             } else {
                 JsonNodes.replaceFields(root, sources, "components", components);
+            }
+        }
+
+        private void addComponentSection(String key, ObjectNode section, ObjectNode components) {
+            switch (key) {
+                case DEFINITIONS -> components.set("schemas", section);
+                case PARAMETERS -> componentParameters(section, components);
+                case RESPONSES -> {
+                    eachObject(section, (name, response) ->
+                            convertResponse(response, produces, List.of(RESPONSES, name)));
+                    components.set(RESPONSES, section);
+                }
+                case SECURITY_DEFINITIONS -> {
+                    eachObject(section, (name, scheme) ->
+                            convertSecurityScheme(scheme, List.of(SECURITY_DEFINITIONS, name)));
+                    components.set("securitySchemes", section);
+                }
+                default -> {
+                    // not a section 2.0 keeps reusable things in
+                }
             }
         }
 
@@ -561,6 +570,15 @@ public final class Swagger20To30 implements ConversionStep {
         private static String globalName(ObjectNode parameter) {
             String ref = parameter.path(REF).asText(null);
             return ref != null && ref.startsWith("#/parameters/") ? ref.substring("#/parameters/".length()) : null;
+        }
+
+        /** Every entry of {@code map} whose value is an object, in order, skipping {@code x-} extensions. */
+        private static void eachObject(ObjectNode map, BiConsumer<String, ObjectNode> action) {
+            for (String name : JsonNodes.fieldNames(map)) {
+                if (!name.startsWith("x-") && map.get(name) instanceof ObjectNode value) {
+                    action.accept(name, value);
+                }
+            }
         }
 
         private static ObjectNode refTo(String section, String name) {
