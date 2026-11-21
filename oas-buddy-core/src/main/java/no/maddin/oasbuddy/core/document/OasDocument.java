@@ -9,6 +9,7 @@ import no.maddin.oasbuddy.core.model.Paths;
 import no.maddin.oasbuddy.core.model.SecurityRequirements;
 import no.maddin.oasbuddy.core.model.Servers;
 import no.maddin.oasbuddy.core.model.Tags;
+import no.maddin.oasbuddy.core.model.Webhooks;
 
 import java.util.Optional;
 
@@ -117,6 +118,11 @@ public final class OasDocument {
     /** The root {@code tags} array: the tags this document defines. See {@link Tags}. */
     public Tags getTags() {
         return new Tags(root);
+    }
+
+    /** OAS 3.1's root {@code webhooks}. Reading never adds the key; see {@link Webhooks}. */
+    public Webhooks getWebhooks() {
+        return new Webhooks(root);
     }
 
     /**

@@ -43,11 +43,22 @@ public final class Info {
         JsonNodes.setText(node, "termsOfService", termsOfService);
     }
 
-    public Contact getContact() {
-        return new Contact(JsonNodes.objectChild(node, "contact"));
+    /** OAS 3.1: a short summary of the API. */
+    public String getSummary() {
+        return JsonNodes.text(node, "summary");
     }
 
+    public void setSummary(String summary) {
+        JsonNodes.setText(node, "summary", summary);
+    }
+
+    /** Reading never adds {@code contact}; see {@link Contact}. */
+    public Contact getContact() {
+        return new Contact(node);
+    }
+
+    /** Reading never adds {@code license}; see {@link License}. */
     public License getLicense() {
-        return new License(JsonNodes.objectChild(node, "license"));
+        return new License(node);
     }
 }

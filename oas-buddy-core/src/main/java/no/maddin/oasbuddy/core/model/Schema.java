@@ -23,6 +23,8 @@ public final class Schema {
     private static final String ENUM = "enum";
     private static final String DEFAULT = "default";
     private static final String EXAMPLE = "example";
+    private static final String EXAMPLES = "examples";
+    private static final String CONST = "const";
     private static final String PROPERTIES = "properties";
     private static final String REQUIRED = "required";
     private static final String NULLABLE = "nullable";
@@ -164,22 +166,38 @@ public final class Schema {
 
     /** The allowed values, in order, as typed values (see {@link SchemaValues}). Empty if none. */
     public List<JsonNode> getEnum() {
-        List<JsonNode> values = new ArrayList<>();
-        if (node.get(ENUM) instanceof ArrayNode arrayNode) {
-            arrayNode.forEach(values::add);
-        }
-        return values;
+        return values(ENUM);
     }
 
     /** Replaces the allowed values; an empty list removes {@code enum} rather than leaving {@code []}. */
     public void setEnum(List<JsonNode> values) {
-        if (values.isEmpty()) {
-            node.remove(ENUM);
-            return;
-        }
-        ArrayNode array = JsonNodes.arrayChild(node, ENUM);
-        array.removeAll();
-        values.forEach(array::add);
+        setValues(ENUM, values);
+    }
+
+    /**
+     * OAS 3.1: the example values, in order. Empty if none — also when {@code examples} is not an
+     * array, which this editor leaves alone rather than reading as a list.
+     */
+    public List<JsonNode> getExamples() {
+        return values(EXAMPLES);
+    }
+
+    /** Replaces the example values; an empty list removes {@code examples} rather than leaving {@code []}. */
+    public void setExamples(List<JsonNode> values) {
+        setValues(EXAMPLES, values);
+    }
+
+    /**
+     * OAS 3.1: the one value the schema allows, or {@code null} if absent. A JSON {@code null} is a
+     * legitimate constant and comes back as a {@code NullNode}.
+     */
+    public JsonNode getConst() {
+        return node.get(CONST);
+    }
+
+    /** {@code null} removes the key. */
+    public void setConst(JsonNode value) {
+        setValue(CONST, value);
     }
 
     /**
@@ -406,6 +424,24 @@ public final class Schema {
     /** The schema form, replacing a boolean form with an empty schema if need be. */
     public Schema createAdditionalPropertiesSchema() {
         return new Schema(JsonNodes.objectChild(node, ADDITIONAL_PROPERTIES));
+    }
+
+    private List<JsonNode> values(String field) {
+        List<JsonNode> values = new ArrayList<>();
+        if (node.get(field) instanceof ArrayNode arrayNode) {
+            arrayNode.forEach(values::add);
+        }
+        return values;
+    }
+
+    private void setValues(String field, List<JsonNode> values) {
+        if (values.isEmpty()) {
+            node.remove(field);
+            return;
+        }
+        ArrayNode array = JsonNodes.arrayChild(node, field);
+        array.removeAll();
+        values.forEach(array::add);
     }
 
     private void setValue(String field, JsonNode value) {
