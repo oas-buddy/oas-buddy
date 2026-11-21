@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.testfx.framework.junit5.ApplicationTest;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -64,7 +65,7 @@ class ConversionDialogTest extends ApplicationTest {
         assertEquals(2, list.getItems().size());
         List<String> rows = lookup(".list-cell").queryAll().stream()
                 .map(cell -> ((ListCell<?>) cell).getText())
-                .filter(text -> text != null)
+                .filter(Objects::nonNull)
                 .toList();
         assertEquals(ConversionDialog.describe(CONFLICTS).lines().toList(), rows);
         assertTrue(rows.stream().allMatch(row -> !row.isBlank()));
