@@ -1,5 +1,7 @@
 package no.maddin.oasbuddy.desktop;
 
+import no.maddin.oasbuddy.core.convert.ConversionResult;
+import no.maddin.oasbuddy.core.convert.OasConverter;
 import no.maddin.oasbuddy.core.document.DocumentFormat;
 import no.maddin.oasbuddy.core.document.DocumentReader;
 import no.maddin.oasbuddy.core.document.DocumentWriter;
@@ -26,6 +28,7 @@ import no.maddin.oasbuddy.desktop.pane.ComponentKinds;
 import no.maddin.oasbuddy.desktop.pane.ComponentListPane;
 import no.maddin.oasbuddy.desktop.pane.ComponentRemoval;
 import no.maddin.oasbuddy.desktop.pane.ComponentCatalog;
+import no.maddin.oasbuddy.desktop.pane.ConversionDialog;
 import no.maddin.oasbuddy.desktop.pane.ExamplePane;
 import no.maddin.oasbuddy.desktop.pane.HeaderPane;
 import no.maddin.oasbuddy.desktop.pane.ImportOnlyPane;
@@ -81,6 +84,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -99,6 +103,7 @@ public class MainApp extends Application {
     private static final String PATHS = "Paths";
 
     private final OasValidator validator = new OasValidator();
+    private final OasConverter converter = OasConverter.standard();
 
     /** Overridden by tests, which cannot answer a modal dialog. */
     private RemovalConfirmation confirmation = RemovalConfirmation.dialog();
@@ -111,6 +116,9 @@ public class MainApp extends Application {
      * replaced by a reference, so its button reads "Replace".
      */
     private RemovalConfirmation replaceConfirmation = RemovalConfirmation.dialog("Replace");
+
+    /** Overridden by tests, which cannot answer a modal dialog; asked before a lossy conversion. */
+    private RemovalConfirmation conversionConfirmation = ConversionDialog.dialog();
 
     /** Overridden by tests, which cannot dismiss a modal dialog. */
     private Runnable aboutAction = this::showAbout;
@@ -129,6 +137,13 @@ public class MainApp extends Application {
     private TreeView<OutlineNode> outlineView;
     private MenuItem saveItem;
     private MenuItem saveAsItem;
+    private Menu convertMenu;
+    /**
+     * Where Save As proposes to put a converted document: next to the file it came from, under a
+     * name that says the version. A converted document belongs to no file, so the original — for
+     * 2.0 the only copy — is never overwritten by a plain Save.
+     */
+    private Path saveAsSuggestion;
     private BorderPane centerHolder;
     private ListView<String> validationList;
 
@@ -223,12 +238,15 @@ public class MainApp extends Application {
 
         Menu viewMenu = new Menu("View", null, lightThemeItem, darkThemeItem);
 
+        convertMenu = new Menu("Convert to");
+        Menu documentMenu = new Menu("Document", null, convertMenu);
+
         MenuItem about = new MenuItem("About OAS Buddy");
         about.setOnAction(e -> aboutAction.run());
 
         Menu helpMenu = new Menu("Help", null, about);
 
-        return new MenuBar(fileMenu, viewMenu, helpMenu);
+        return new MenuBar(fileMenu, documentMenu, viewMenu, helpMenu);
     }
 
     private void showAbout() {
@@ -275,6 +293,7 @@ public class MainApp extends Application {
         try {
             document = DocumentReader.read(file);
             currentFile = file;
+            saveAsSuggestion = null;
             refreshOutline();
             validationList.getItems().clear();
             updateWindowState();
@@ -318,11 +337,16 @@ public class MainApp extends Application {
                 yamlFilter, jsonFilter, new FileChooser.ExtensionFilter("All files", "*.*"));
         chooser.setSelectedExtensionFilter(
                 document.getFormat() == DocumentFormat.JSON ? jsonFilter : yamlFilter);
+        if (saveAsSuggestion != null) {
+            chooser.setInitialDirectory(saveAsSuggestion.toAbsolutePath().getParent().toFile());
+            chooser.setInitialFileName(saveAsSuggestion.getFileName().toString());
+        }
         var file = chooser.showSaveDialog(stage);
         if (file == null) {
             return;
         }
         currentFile = file.toPath();
+        saveAsSuggestion = null;
         writeToFile(currentFile);
     }
 
@@ -434,9 +458,8 @@ public class MainApp extends Application {
      * file cannot hold. The node is selected, so its note shows straight away.
      */
     private void showImportOnly(TreeItem<OutlineNode> root) {
-        // No conversion is wired in yet, so the pane shows its convert buttons disabled.
         TreeItem<OutlineNode> note = new TreeItem<>(new OutlineNode(
-                OasVersion.V2_0.label() + " (read-only)", () -> ImportOnlyPane.build(document, null)));
+                OasVersion.V2_0.label() + " (read-only)", () -> ImportOnlyPane.build(document, this::convert)));
         root.getChildren().add(note);
         outlineView.setRoot(root);
         outlineView.setShowRoot(true);
@@ -527,16 +550,61 @@ public class MainApp extends Application {
     void newDocument(OasVersion version) {
         document = OasDocument.newDocument(DocumentFormat.YAML, version);
         currentFile = null;
+        saveAsSuggestion = null;
         refreshOutline();
         validationList.getItems().clear();
         updateWindowState();
     }
 
-    /** The title, and whether the document may be saved — never for an import-only one. */
+    /**
+     * Converts the document to {@code target}. A conversion that loses or moves nothing happens
+     * at once; otherwise every conflict is listed first, and declining leaves the document as it
+     * was. The result belongs to no file, so the next Save asks where to put it.
+     * Package-private for the tests.
+     */
+    void convert(OasVersion target) {
+        // Only targets the converter reaches are ever offered, so this does not throw.
+        ConversionResult result = converter.convert(document, target);
+        if (!result.isLossless() && !conversionConfirmation.confirm(
+                ConversionDialog.question(target, result.conflicts().size()),
+                ConversionDialog.describe(result.conflicts()))) {
+            return;
+        }
+        if (currentFile != null) {
+            saveAsSuggestion = suggestedFile(currentFile, target);
+        }
+        document = result.converted();
+        currentFile = null;
+        refreshOutline();
+        updateWindowState();
+        runValidation();
+    }
+
+    /** {@code legacy.yaml} converted to 3.1 is proposed as {@code legacy-3.1.yaml}, beside it. */
+    static Path suggestedFile(Path original, OasVersion target) {
+        String name = original.getFileName().toString();
+        int dot = name.lastIndexOf('.');
+        String base = dot > 0 ? name.substring(0, dot) : name;
+        String extension = dot > 0 ? name.substring(dot) : "";
+        String version = target.label().substring(target.label().lastIndexOf(' ') + 1);
+        return original.resolveSibling(base + "-" + version + extension);
+    }
+
+    /**
+     * The title, whether the document may be saved — never an import-only one — and the versions it
+     * can be converted to.
+     */
     private void updateWindowState() {
         stage.setTitle(windowTitle(currentFile, document.getVersion()));
         saveItem.setDisable(isImportOnly());
         saveAsItem.setDisable(isImportOnly());
+        convertMenu.getItems().clear();
+        document.getVersion().map(converter::targets).orElse(Set.of()).forEach(target -> {
+            MenuItem item = new MenuItem(target.label());
+            item.setOnAction(e -> convert(target));
+            convertMenu.getItems().add(item);
+        });
+        convertMenu.setDisable(convertMenu.getItems().isEmpty());
     }
 
     /** {@code api.yaml (OpenAPI 3.1) — OAS Buddy}; a document not yet saved is "Untitled". */
@@ -577,6 +645,10 @@ public class MainApp extends Application {
 
     void setReplaceConfirmation(RemovalConfirmation replaceConfirmation) {
         this.replaceConfirmation = replaceConfirmation;
+    }
+
+    void setConversionConfirmation(RemovalConfirmation conversionConfirmation) {
+        this.conversionConfirmation = conversionConfirmation;
     }
 
     void setAboutAction(Runnable aboutAction) {

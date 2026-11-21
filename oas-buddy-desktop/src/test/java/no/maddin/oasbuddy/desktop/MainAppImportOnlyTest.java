@@ -81,12 +81,13 @@ class MainAppImportOnlyTest extends ApplicationTest {
         assertTrue(note.getText().startsWith("Swagger 2.0 documents can be read and validated"), note.getText());
     }
 
+    /** Converting itself is covered by {@code MainAppConversionTest}. */
     @Test
-    void conversionIsOfferedButNotYetAvailable() {
+    void conversionToEither3xVersionIsOffered() {
         for (OasVersion target : List.of(OasVersion.V3_0, OasVersion.V3_1)) {
             Button convert = lookup("#" + ImportOnlyPane.ID + "-convert-to-" + target.name()).queryButton();
             assertEquals("Convert to " + target.label() + "…", convert.getText());
-            assertTrue(convert.isDisabled());
+            assertFalse(convert.isDisabled());
         }
     }
 
