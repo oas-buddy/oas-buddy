@@ -103,6 +103,32 @@ class MainAppImportOnlyTest extends ApplicationTest {
         assertEquals("Info", String.valueOf(outline.getRoot().getChildren().getFirst().getValue()));
     }
 
+    /** The menu items are disabled; Save and Save As themselves refuse too, should they be reached anyway. */
+    @Test
+    void evenWhenTriggeredSaveAndSaveAsWriteNothing() throws IOException {
+        // MenuItem.fire() does not check the disabled flag, so this reaches save() and saveAs() themselves.
+        // Were their own check missing, Save As would open the native file chooser here.
+        interact(() -> fileItem("Save").fire());
+        interact(() -> fileItem("Save As...").fire());
+
+        assertEquals(SWAGGER, Files.readString(file));
+        assertEquals("legacy.yaml (Swagger 2.0) — OAS Buddy", stage.getTitle());
+    }
+
+    /** The counterpart: a 3.x document opened from a file is saved straight back to it, no chooser involved. */
+    @Test
+    void aPlainSaveWritesA3xDocumentBackToItsFile() throws IOException {
+        Path openapi = tempDir.resolve("pets.yaml");
+        Files.writeString(openapi, "openapi: 3.1.0\ninfo:\n  title: Pets\n  version: 1.0.0\npaths: {}\n");
+        interact(() -> app.open(openapi));
+        interact(() -> app.getDocument().getInfo().setTitle("Renamed pets"));
+
+        interact(() -> fileItem("Save").fire());
+
+        assertTrue(Files.readString(openapi).contains("title: Renamed pets"), Files.readString(openapi));
+        assertEquals("pets.yaml (OpenAPI 3.1) — OAS Buddy", stage.getTitle());
+    }
+
     @Test
     void validationStillRuns() {
         interact(() -> lookup(".button").queryAll().stream()
@@ -126,11 +152,11 @@ class MainAppImportOnlyTest extends ApplicationTest {
 
     private MenuItem fileItem(String text) {
         MenuBar menuBar = lookup(".menu-bar").queryAs(MenuBar.class);
-        Menu file = menuBar.getMenus().stream()
+        Menu fileMenu = menuBar.getMenus().stream()
                 .filter(menu -> "File".equals(menu.getText()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("no File menu"));
-        return file.getItems().stream()
+        return fileMenu.getItems().stream()
                 .filter(item -> text.equals(item.getText()))
                 .findFirst()
                 .orElseThrow(() -> new AssertionError("no " + text + " item"));
