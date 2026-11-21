@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class Oas30To31Test {
@@ -45,7 +46,7 @@ class Oas30To31Test {
                 "components → schemas → Pet → properties → weight → exclusiveMaximum",
                 "components → schemas → Pet → properties → owner → nullable"),
                 result.conflicts().stream().map(Conflict::location).toList());
-        assertTrue(result.conflicts().getFirst().resolution().startsWith("kept as x-oas-buddy-exclusiveMaximum"),
+        assertTrue(result.conflicts().getFirst().resolution().startsWith("kept as x-oasbuddy-exclusiveMaximum"),
                 result.conflicts().getFirst().resolution());
     }
 
@@ -76,6 +77,19 @@ class Oas30To31Test {
         expected.put("openapi", "3.1.0");
         assertEquals(inOrder(OasDocument.wrap(expected, format)), inOrder(result.converted()));
 
+        var validation = new OasValidator().validate(result.converted());
+        assertTrue(validation.isValid(), () -> validation.messages().toString());
+    }
+
+    /**
+     * What is set aside must not make the 3.1 result invalid: 3.1 reserves the {@code x-oas-} prefix,
+     * which is why the kept keywords use {@code x-oasbuddy-}.
+     */
+    @Test
+    void theConvertedDocumentIncludingWhatWasSetAsideValidatesAs31() throws IOException {
+        ConversionResult result = converter.convert(fixture("nullable-bounds.yaml"), OasVersion.V3_1);
+
+        assertFalse(result.isLossless(), "the fixture should set something aside");
         var validation = new OasValidator().validate(result.converted());
         assertTrue(validation.isValid(), () -> validation.messages().toString());
     }

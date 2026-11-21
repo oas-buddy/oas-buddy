@@ -22,13 +22,13 @@ import java.util.List;
  *       {@code exclusiveMinimum: true} (likewise for the maximum).</li>
  * </ul>
  *
- * <p>Set aside as {@code x-oas-buddy-<keyword>} and reported (see {@link Kept}): {@code webhooks},
+ * <p>Set aside as {@code x-oasbuddy-<keyword>} and reported (see {@link Kept}): {@code webhooks},
  * {@code jsonSchemaDialect}, {@code info.summary}, {@code license.identifier},
  * {@code components.pathItems}, the JSON Schema 2020-12 keywords 3.0 does not have
  * ({@link #SCHEMA_KEYWORDS_ONLY_IN_31}), a {@code type} list naming several types or only
  * {@code "null"}, and an exclusive bound beside an inclusive one. A {@code mutualTLS} security scheme
  * cannot stay in {@code securitySchemes}, where 3.0 would read it as a scheme with an unknown type,
- * so the whole scheme moves to {@code components.x-oas-buddy-securitySchemes}.
+ * so the whole scheme moves to {@code components.x-oasbuddy-securitySchemes}.
  *
  * <p>Keywords {@link Oas30To31} set aside are restored first. An exclusive bound is restored only
  * in its 3.0 (boolean) form: a numeric one was set aside by this step on an earlier conversion.

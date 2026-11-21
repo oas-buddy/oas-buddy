@@ -11,14 +11,19 @@ import java.util.function.Predicate;
 
 /**
  * What a conversion cannot express in the target version is not dropped: the keyword is renamed in
- * place to {@code x-oas-buddy-<keyword>} — an extension, which every object that can hold the
+ * place to {@code x-oasbuddy-<keyword>} — an extension, which every object that can hold the
  * keyword also accepts — with its value untouched, and reported as a {@link Conflict}. The step
  * going the other way {@link #restore restores} it, so converting there and back gives the original.
  */
 final class Kept {
 
-    /** The prefix every keyword set aside during a conversion is kept under. */
-    static final String PREFIX = "x-oas-buddy-";
+    /**
+     * The prefix every keyword set aside during a conversion is kept under. Not {@code x-oas-…}: OAS
+     * 3.1 reserves {@code x-oai-} and {@code x-oas-} for the OpenAPI Initiative, so a key with that
+     * prefix is a validation error in every 3.1 document — and a conversion to 3.1 sets keywords
+     * aside too.
+     */
+    static final String PREFIX = "x-oasbuddy-";
 
     private Kept() {
     }

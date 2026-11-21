@@ -1,12 +1,12 @@
 openapi: 3.0.3
 info:
   title: Everything 3.1
-  x-oas-buddy-summary: Uses what 3.0 lacks
+  x-oasbuddy-summary: Uses what 3.0 lacks
   version: 1.0.0
   license:
     name: Apache 2.0
-    x-oas-buddy-identifier: Apache-2.0
-x-oas-buddy-jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
+    x-oasbuddy-identifier: Apache-2.0
+x-oasbuddy-jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 paths:
   /pets:
     get:
@@ -28,7 +28,7 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Pet'
-x-oas-buddy-webhooks:
+x-oasbuddy-webhooks:
   newPet:
     post:
       requestBody:
@@ -44,29 +44,29 @@ x-oas-buddy-webhooks:
 components:
   schemas:
     Pet:
-      x-oas-buddy-$schema: https://json-schema.org/draft/2020-12/schema
+      x-oasbuddy-$schema: https://json-schema.org/draft/2020-12/schema
       type: object
       properties:
         kind:
-          x-oas-buddy-const: dog
-          x-oas-buddy-examples:
+          x-oasbuddy-const: dog
+          x-oasbuddy-examples:
             - dog
         id:
-          x-oas-buddy-type:
+          x-oasbuddy-type:
             - integer
             - string
         nothing:
-          x-oas-buddy-type:
+          x-oasbuddy-type:
             - 'null'
         plain:
           type: string
         size:
           type: number
           minimum: 1
-          x-oas-buddy-exclusiveMinimum: 0
+          x-oasbuddy-exclusiveMinimum: 0
           maximum: 10
           exclusiveMaximum: true
-  x-oas-buddy-pathItems:
+  x-oasbuddy-pathItems:
     Shared:
       get:
         responses:
@@ -77,6 +77,6 @@ components:
       type: apiKey
       name: X-API-Key
       in: header
-  x-oas-buddy-securitySchemes:
+  x-oasbuddy-securitySchemes:
     Mutual:
       type: mutualTLS

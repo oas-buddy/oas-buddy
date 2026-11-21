@@ -57,11 +57,11 @@ class Oas31To30Test {
                 result.conflicts().stream().map(Conflict::location).toList());
         assertEquals(new Conflict("components → securitySchemes → Mutual",
                 "mutualTLS security schemes do not exist in OAS 3.0",
-                "kept under components → x-oas-buddy-securitySchemes; security requirements naming it now name no scheme"),
+                "kept under components → x-oasbuddy-securitySchemes; security requirements naming it now name no scheme"),
                 result.conflicts().get(5));
         assertEquals(new Conflict(pet + "properties → id → type",
                 "a list of several types has no OAS 3.0 equivalent",
-                "kept as x-oas-buddy-type; the schema now admits any type; use oneOf to restrict it"),
+                "kept as x-oasbuddy-type; the schema now admits any type; use oneOf to restrict it"),
                 result.conflicts().get(9));
     }
 
@@ -95,7 +95,7 @@ class Oas31To30Test {
         String text = inOrder(there.converted());
         assertTrue(text.contains("\"null\""), text);
         assertTrue(text.contains("\"exclusiveMinimum\": 0"), text);
-        assertTrue(text.contains("\"x-oas-buddy-nullable\": true"), text);
+        assertTrue(text.contains("\"x-oasbuddy-nullable\": true"), text);
         assertEquals(2, there.conflicts().size(), () -> there.conflicts().toString());
     }
 
@@ -123,14 +123,14 @@ class Oas31To30Test {
                   schemas:
                     Taken:
                       const: 1
-                      x-oas-buddy-const: mine
+                      x-oasbuddy-const: mine
                 """, DocumentFormat.YAML);
 
         ConversionResult result = converter.convert(document, OasVersion.V3_0);
 
         JsonNode taken = result.converted().getRoot().at("/components/schemas/Taken");
-        assertEquals("{\"const\":1,\"x-oas-buddy-const\":\"mine\"}", taken.toString());
-        assertEquals("left as it is, since x-oas-buddy-const is already taken",
+        assertEquals("{\"const\":1,\"x-oasbuddy-const\":\"mine\"}", taken.toString());
+        assertEquals("left as it is, since x-oasbuddy-const is already taken",
                 result.conflicts().getFirst().resolution());
     }
 

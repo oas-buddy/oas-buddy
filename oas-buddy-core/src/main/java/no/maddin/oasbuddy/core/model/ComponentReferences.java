@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 /**
  * Finds where a named component — a schema, a response, … — is referenced from, so a caller can
@@ -80,6 +81,31 @@ public final class ComponentReferences {
                 count[0]++;
             }
             return matches;
+        });
+        return count[0];
+    }
+
+    /**
+     * Rewrites every {@code $ref} in the tree through {@code mapping}, which returns the new text,
+     * or {@code null} to leave a reference alone — for an import that moves whole sections
+     * ({@code #/definitions/Pet} to {@code #/components/schemas/Pet}). Shares the walk of
+     * {@link #find}.
+     *
+     * @return how many references were rewritten
+     */
+    public static int rewriteAll(ObjectNode root, UnaryOperator<String> mapping) {
+        int[] count = {0};
+        walk(root, new ArrayDeque<>(), (node, location) -> {
+            String ref = text(node.get(REF_FIELD));
+            if (ref == null) {
+                return false;
+            }
+            String replacement = mapping.apply(ref);
+            if (replacement != null && !replacement.equals(ref)) {
+                node.put(REF_FIELD, replacement);
+                count[0]++;
+            }
+            return true;
         });
         return count[0];
     }

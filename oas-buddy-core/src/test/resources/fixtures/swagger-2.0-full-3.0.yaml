@@ -1,0 +1,196 @@
+openapi: 3.0.3
+info:
+  title: Full import
+  version: 1.0.0
+servers:
+- url: https://api.example.com/v1
+- url: http://api.example.com/v1
+tags:
+- name: pets
+security:
+- Basic: []
+paths:
+  /pets:
+    parameters:
+    - $ref: "#/components/parameters/Limit"
+    get:
+      tags:
+      - pets
+      operationId: listPets
+      parameters:
+      - name: tags
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+      - name: sort
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        style: pipeDelimited
+      - name: X-Trace
+        in: header
+        schema:
+          type: string
+          format: uuid
+      - name: fields
+        in: query
+        schema:
+          type: array
+          items:
+            type: string
+        x-oasbuddy-collectionFormat: tsv
+      responses:
+        "200":
+          description: A list of pets
+          headers:
+            X-Total:
+              schema:
+                type: integer
+              description: How many there are
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pet"
+              example:
+              - id: 1
+            application/xml:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Pet"
+        default:
+          $ref: "#/components/responses/Error"
+    post:
+      operationId: createPet
+      requestBody:
+        $ref: "#/components/requestBodies/PetBody"
+      responses:
+        "201":
+          description: Created
+  /pets/{petId}:
+    parameters:
+    - name: petId
+      in: path
+      required: true
+      schema:
+        type: integer
+        format: int64
+    put:
+      operationId: replacePet
+      requestBody:
+        description: The new pet
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Pet"
+        required: true
+      responses:
+        "200":
+          description: Replaced
+      x-oasbuddy-parameters:
+      - name: other
+        in: body
+        schema:
+          type: string
+  /pets/{petId}/photo:
+    post:
+      operationId: uploadPhoto
+      servers:
+      - url: https://api.example.com/v1
+      parameters:
+      - name: petId
+        in: path
+        required: true
+        schema:
+          type: integer
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: The photo
+                caption:
+                  type: string
+              required:
+              - file
+        required: true
+      responses:
+        "204":
+          description: Uploaded
+components:
+  schemas:
+    Pet:
+      type: object
+      discriminator:
+        propertyName: kind
+      required:
+      - id
+      - kind
+      properties:
+        id:
+          type: integer
+        kind:
+          type: string
+        tag:
+          type: string
+          nullable: true
+    Error:
+      type: object
+      properties:
+        message:
+          type: string
+  parameters:
+    Limit:
+      name: limit
+      in: query
+      schema:
+        type: array
+        items:
+          type: integer
+      explode: false
+  requestBodies:
+    PetBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Pet"
+      required: true
+  responses:
+    Error:
+      description: Something went wrong
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+  securitySchemes:
+    Basic:
+      type: http
+      scheme: basic
+    ApiKey:
+      type: apiKey
+      name: X-API-Key
+      in: header
+    OAuth:
+      type: oauth2
+      flows:
+        authorizationCode:
+          authorizationUrl: https://example.com/auth
+          tokenUrl: https://example.com/token
+          scopes:
+            read:pets: read your pets
+    Machine:
+      type: oauth2
+      flows:
+        clientCredentials:
+          tokenUrl: https://example.com/token
+          scopes: {}

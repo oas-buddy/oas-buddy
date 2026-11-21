@@ -1,0 +1,179 @@
+swagger: '2.0'
+info:
+  title: Full import
+  version: 1.0.0
+host: api.example.com
+basePath: /v1
+schemes:
+  - https
+  - http
+consumes:
+  - application/json
+produces:
+  - application/json
+tags:
+  - name: pets
+security:
+  - Basic: []
+paths:
+  /pets:
+    parameters:
+      - $ref: '#/parameters/Limit'
+    get:
+      tags:
+        - pets
+      operationId: listPets
+      parameters:
+        - name: tags
+          in: query
+          type: array
+          items:
+            type: string
+          collectionFormat: multi
+        - name: sort
+          in: query
+          type: array
+          items:
+            type: string
+          collectionFormat: pipes
+        - name: X-Trace
+          in: header
+          type: string
+          format: uuid
+        - name: fields
+          in: query
+          type: array
+          items:
+            type: string
+          collectionFormat: tsv
+      produces:
+        - application/json
+        - application/xml
+      responses:
+        '200':
+          description: A list of pets
+          headers:
+            X-Total:
+              type: integer
+              description: How many there are
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Pet'
+          examples:
+            application/json:
+              - id: 1
+        default:
+          $ref: '#/responses/Error'
+    post:
+      operationId: createPet
+      parameters:
+        - $ref: '#/parameters/PetBody'
+      responses:
+        '201':
+          description: Created
+  /pets/{petId}:
+    parameters:
+      - name: petId
+        in: path
+        required: true
+        type: integer
+        format: int64
+    put:
+      operationId: replacePet
+      parameters:
+        - name: pet
+          in: body
+          description: The new pet
+          required: true
+          schema:
+            $ref: '#/definitions/Pet'
+        - name: other
+          in: body
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Replaced
+  /pets/{petId}/photo:
+    post:
+      operationId: uploadPhoto
+      consumes:
+        - multipart/form-data
+      schemes:
+        - https
+      parameters:
+        - name: petId
+          in: path
+          required: true
+          type: integer
+        - name: file
+          in: formData
+          required: true
+          type: file
+          description: The photo
+        - $ref: '#/parameters/Caption'
+      responses:
+        '204':
+          description: Uploaded
+definitions:
+  Pet:
+    type: object
+    discriminator: kind
+    required:
+      - id
+      - kind
+    properties:
+      id:
+        type: integer
+      kind:
+        type: string
+      tag:
+        type: string
+        x-nullable: true
+  Error:
+    type: object
+    properties:
+      message:
+        type: string
+parameters:
+  Limit:
+    name: limit
+    in: query
+    type: array
+    items:
+      type: integer
+  PetBody:
+    name: pet
+    in: body
+    required: true
+    schema:
+      $ref: '#/definitions/Pet'
+  Caption:
+    name: caption
+    in: formData
+    type: string
+responses:
+  Error:
+    description: Something went wrong
+    schema:
+      $ref: '#/definitions/Error'
+securityDefinitions:
+  Basic:
+    type: basic
+  ApiKey:
+    type: apiKey
+    name: X-API-Key
+    in: header
+  OAuth:
+    type: oauth2
+    flow: accessCode
+    authorizationUrl: https://example.com/auth
+    tokenUrl: https://example.com/token
+    scopes:
+      read:pets: read your pets
+  Machine:
+    type: oauth2
+    flow: application
+    tokenUrl: https://example.com/token
+    scopes: {}

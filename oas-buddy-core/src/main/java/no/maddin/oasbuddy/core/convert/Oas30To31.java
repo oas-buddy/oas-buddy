@@ -25,7 +25,7 @@ import java.util.stream.Stream;
  * <p>A {@code false} flag is the default in both versions and is simply dropped. A {@code true}
  * flag that has no effect in 3.0 — {@code nullable} on a schema without a {@code type} (3.0.3 says
  * it then adds nothing), an exclusive flag without its bound — has no 3.1 spelling either. Rather
- * than drop what the author wrote, it is kept as {@code x-oas-buddy-<keyword>} in its place and
+ * than drop what the author wrote, it is kept as {@code x-oasbuddy-<keyword>} in its place and
  * reported, so converting back restores it (see {@link Kept}).
  *
  * <p>Whatever {@link Oas31To30} set aside is restored, so 3.1 → 3.0 → 3.1 gives back the 3.1 keywords.
