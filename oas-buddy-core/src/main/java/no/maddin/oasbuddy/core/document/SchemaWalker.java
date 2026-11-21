@@ -23,7 +23,7 @@ import java.util.Set;
  * {@code default}, {@code enum}) is never entered: it may contain anything.
  *
  * <p>An {@code x-} extension is never entered: whatever it holds is not an OAS object, and a
- * conversion keeps keywords the target version lacks under {@code x-oas-buddy-…} precisely so they
+ * conversion keeps keywords the target version lacks under {@code x-oasbuddy-…} precisely so they
  * stay untouched. (Inside {@code properties} a key is a property name, so {@code x-foo} is walked
  * there like any other.)
  *

@@ -60,9 +60,9 @@ components:
           description: a property that happens to be named nullable
         weight:
           type: number
-          x-oas-buddy-exclusiveMaximum: true
+          x-oasbuddy-exclusiveMaximum: true
         owner:
-          x-oas-buddy-nullable: true
+          x-oasbuddy-nullable: true
           allOf:
           - $ref: '#/components/schemas/Owner'
     Owner:
