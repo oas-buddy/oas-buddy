@@ -37,11 +37,13 @@ final class SchemaDetails {
 
     static final String DEFAULT = "schema-default";
     static final String EXAMPLE = "schema-example";
+    /** Appended to a value list's style class to name its input field. */
+    static final String INPUT_SUFFIX = "-input";
     static final String CONST = "schema-const";
     static final String ENUM = "schema-enum";
-    static final String ENUM_INPUT = ENUM + "-input";
+    static final String ENUM_INPUT = ENUM + INPUT_SUFFIX;
     static final String EXAMPLES = "schema-examples";
-    static final String EXAMPLES_INPUT = EXAMPLES + "-input";
+    static final String EXAMPLES_INPUT = EXAMPLES + INPUT_SUFFIX;
 
     private static final double VALUE_LIST_HEIGHT = 120;
 
@@ -108,7 +110,7 @@ final class SchemaDetails {
         Runnable write = () -> setter.accept(new ArrayList<>(values.getItems()));
 
         TextField input = new TextField();
-        input.getStyleClass().add(styleClass + "-input");
+        input.getStyleClass().add(styleClass + INPUT_SUFFIX);
         input.setPromptText("value");
         Runnable add = () -> {
             JsonNode value = SchemaValues.parse(input.getText(), schema.getType());
