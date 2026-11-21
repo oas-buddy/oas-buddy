@@ -48,7 +48,7 @@ public final class OasConverter {
 
     /** The converter with every step this editor ships. */
     public static OasConverter standard() {
-        return new OasConverter(List.of(new Oas30To31()));
+        return new OasConverter(List.of(new Oas30To31(), new Oas31To30()));
     }
 
     /** The versions a document of version {@code from} can be converted to, not counting itself. */

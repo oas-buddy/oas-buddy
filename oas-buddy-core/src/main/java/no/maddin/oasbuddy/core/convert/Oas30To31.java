@@ -9,6 +9,7 @@ import no.maddin.oasbuddy.core.document.SchemaWalker;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * OAS 3.0 → 3.1. Everything 3.0 can say, 3.1 can say too, so this is lossless; only the spelling of
@@ -25,12 +26,18 @@ import java.util.List;
  * flag that has no effect in 3.0 — {@code nullable} on a schema without a {@code type} (3.0.3 says
  * it then adds nothing), an exclusive flag without its bound — has no 3.1 spelling either. Rather
  * than drop what the author wrote, it is kept as {@code x-oas-buddy-<keyword>} in its place and
- * reported, so converting back restores it.
+ * reported, so converting back restores it (see {@link Kept}).
+ *
+ * <p>Whatever {@link Oas31To30} set aside is restored, so 3.1 → 3.0 → 3.1 gives back the 3.1 keywords.
  */
 public final class Oas30To31 implements ConversionStep {
 
-    /** The prefix every keyword this editor sets aside during a conversion is kept under. */
-    public static final String KEPT_PREFIX = "x-oas-buddy-";
+    static final String EXCLUSIVE_MINIMUM = "exclusiveMinimum";
+    static final String EXCLUSIVE_MAXIMUM = "exclusiveMaximum";
+
+    /** Everything {@link Oas31To30} sets aside in a schema, which this step restores. */
+    private static final List<String> SCHEMA_KEYWORDS_RESTORED = Stream.concat(
+            Oas31To30.SCHEMA_KEYWORDS_ONLY_IN_31.stream(), Stream.of("type")).toList();
 
     static final String NULLABLE = "nullable";
     static final String TYPE = "type";
@@ -50,12 +57,44 @@ public final class Oas30To31 implements ConversionStep {
     public List<Conflict> apply(ObjectNode root) {
         List<Conflict> conflicts = new ArrayList<>();
         SchemaWalker.walk(root, OasVersion.V3_0, (schema, location) -> {
+            Kept.restore(schema, SCHEMA_KEYWORDS_RESTORED);
+            Kept.restoreIf(schema, EXCLUSIVE_MINIMUM, JsonNode::isNumber);
+            Kept.restoreIf(schema, EXCLUSIVE_MAXIMUM, JsonNode::isNumber);
             convertNullable(schema, location, conflicts);
-            convertExclusive(schema, "minimum", "exclusiveMinimum", location, conflicts);
-            convertExclusive(schema, "maximum", "exclusiveMaximum", location, conflicts);
+            convertExclusive(schema, "minimum", EXCLUSIVE_MINIMUM, location, conflicts);
+            convertExclusive(schema, "maximum", EXCLUSIVE_MAXIMUM, location, conflicts);
         });
+        restoreOutsideSchemas(root);
         root.put("openapi", OasVersion.V3_1.newDocumentVersion());
         return conflicts;
+    }
+
+    /**
+     * Puts back what {@link Oas31To30} set aside outside schemas. Done after the schema walk, so what
+     * comes back verbatim from 3.1 is not run through the 3.0 → 3.1 rules a second time.
+     */
+    private static void restoreOutsideSchemas(ObjectNode root) {
+        Kept.restore(root, List.of("webhooks", "jsonSchemaDialect"));
+        JsonNode info = root.get("info");
+        Kept.restore(info, List.of("summary"));
+        if (info != null) {
+            Kept.restore(info.get("license"), List.of("identifier"));
+        }
+        if (root.get("components") instanceof ObjectNode components) {
+            Kept.restore(components, List.of(Oas31To30.PATH_ITEMS));
+            String kept = Kept.name(Oas31To30.SECURITY_SCHEMES);
+            if (components.get(kept) instanceof ObjectNode moved) {
+                ObjectNode schemes = JsonNodes.objectChild(components, Oas31To30.SECURITY_SCHEMES);
+                for (String name : JsonNodes.fieldNames(moved)) {
+                    if (!schemes.has(name)) {
+                        schemes.set(name, moved.remove(name));
+                    }
+                }
+                if (moved.isEmpty()) {
+                    components.remove(kept);
+                }
+            }
+        }
     }
 
     private static void convertNullable(ObjectNode schema, List<String> location, List<Conflict> conflicts) {
@@ -77,9 +116,10 @@ public final class Oas30To31 implements ConversionStep {
             }
             schema.remove(NULLABLE);
         } else {
-            keep(schema, NULLABLE, location, conflicts,
+            Kept.setAside(schema, NULLABLE, location,
                     "nullable: true without a type has no effect in OAS 3.0.3 and no OAS 3.1 equivalent",
-                    "admit null with a type that lists \"null\", or anyOf with {type: \"null\"}");
+                    "to make it effective, admit null with a type that lists \"null\", or anyOf with {type: \"null\"}",
+                    conflicts);
         }
     }
 
@@ -99,22 +139,10 @@ public final class Oas30To31 implements ConversionStep {
             schema.remove(exclusive);
             JsonNodes.renameField(schema, bound, exclusive);
         } else {
-            keep(schema, exclusive, location, conflicts,
+            Kept.setAside(schema, exclusive, location,
                     exclusive + ": true without " + bound + " has no effect in OAS 3.0 and no OAS 3.1 equivalent",
-                    "set " + exclusive + " to the bound itself");
+                    "to make it effective, set " + exclusive + " to the bound itself", conflicts);
         }
-    }
-
-    /** Sets {@code keyword} aside as {@code x-oas-buddy-<keyword>}, in place, and reports it. */
-    private static void keep(ObjectNode schema, String keyword, List<String> location, List<Conflict> conflicts,
-                             String problem, String hint) {
-        String kept = KEPT_PREFIX + keyword;
-        if (!JsonNodes.renameField(schema, keyword, kept)) {
-            return;
-        }
-        List<String> at = new ArrayList<>(location);
-        at.add(keyword);
-        conflicts.add(Conflict.at(at, problem, "kept as " + kept + "; to make it effective, " + hint));
     }
 
     private static boolean contains(ArrayNode array, String text) {

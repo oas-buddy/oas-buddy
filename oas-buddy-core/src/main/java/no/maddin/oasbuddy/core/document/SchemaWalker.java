@@ -22,6 +22,11 @@ import java.util.Set;
  * {@code allOf}, {@code anyOf} and {@code oneOf}. Example data ({@code example}, {@code examples},
  * {@code default}, {@code enum}) is never entered: it may contain anything.
  *
+ * <p>An {@code x-} extension is never entered: whatever it holds is not an OAS object, and a
+ * conversion keeps keywords the target version lacks under {@code x-oas-buddy-…} precisely so they
+ * stay untouched. (Inside {@code properties} a key is a property name, so {@code x-foo} is walked
+ * there like any other.)
+ *
  * <p>A schema is visited before its children, so a visitor may rewrite the schema's own keys
  * (rename, replace, remove) and the walk then descends into what it left.
  */
@@ -64,12 +69,12 @@ public final class SchemaWalker {
             if (key.equals(COMPONENTS)) {
                 descend(key, () -> {
                     for (String section : JsonNodes.fieldNames(root.get(COMPONENTS))) {
-                        if (!section.equals(SCHEMAS)) {
+                        if (!section.equals(SCHEMAS) && !isExtension(section)) {
                             descend(section, () -> findSchemaFields(root.get(COMPONENTS).get(section)));
                         }
                     }
                 });
-            } else if (!key.equals(DEFINITIONS)) {
+            } else if (!key.equals(DEFINITIONS) && !isExtension(key)) {
                 descend(key, () -> findSchemaFields(root.get(key)));
             }
         }
@@ -87,7 +92,7 @@ public final class SchemaWalker {
             for (String key : JsonNodes.fieldNames(objectNode)) {
                 if (key.equals("schema")) {
                     descend(key, () -> schema(objectNode.get(key)));
-                } else if (!DATA.contains(key)) {
+                } else if (!DATA.contains(key) && !isExtension(key)) {
                     descend(key, () -> findSchemaFields(objectNode.get(key)));
                 }
             }
@@ -120,6 +125,10 @@ public final class SchemaWalker {
                 });
             }
         }
+    }
+
+    private static boolean isExtension(String key) {
+        return key.startsWith("x-");
     }
 
     private void descend(String segment, Runnable action) {

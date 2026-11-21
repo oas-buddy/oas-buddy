@@ -1,0 +1,47 @@
+openapi: 3.0.3
+info:
+  title: Round trip
+  version: 1.0.0
+paths:
+  /pets:
+    get:
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            nullable: true
+            minimum: 1
+            maximum: 100
+            exclusiveMaximum: true
+      responses:
+        '200':
+          description: ok
+components:
+  schemas:
+    Pet:
+      type: object
+      properties:
+        id:
+          type: integer
+          minimum: 0
+          exclusiveMinimum: true
+        tag:
+          type: string
+          nullable: true
+        weight:
+          type: number
+          exclusiveMaximum: true
+        owner:
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/Owner'
+        x-legacy:
+          type: string
+          nullable: true
+    Owner:
+      type: object
+      x-vendor:
+        schema:
+          type: string
+          nullable: true

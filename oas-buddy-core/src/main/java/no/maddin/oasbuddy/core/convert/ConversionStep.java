@@ -22,7 +22,7 @@ public interface ConversionStep {
     /**
      * Rewrites {@code root} from {@link #from()} to {@link #to()}.
      *
-     * @return what could not be carried over as it was, in document order; empty when the step was
+     * @return what could not be carried over as it was, in a stable order; empty when the step was
      *         lossless for this document
      */
     List<Conflict> apply(ObjectNode root);

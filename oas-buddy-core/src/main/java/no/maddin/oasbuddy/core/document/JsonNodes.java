@@ -107,4 +107,29 @@ public final class JsonNodes {
         entries.forEach(entry -> parent.set(entry.getKey(), entry.getValue()));
         return true;
     }
+
+    /**
+     * Sets {@code field} to {@code value} directly after {@code after}, keeping every other field's
+     * position — for a conversion that splits one keyword into two ({@code type: [string, "null"]}
+     * into {@code type: string} and {@code nullable: true}) and must not push the second to the end.
+     * An existing {@code field} is moved there; when {@code after} is absent the field is appended.
+     */
+    public static void setAfter(ObjectNode parent, String after, String field, JsonNode value) {
+        if (!parent.has(after) || after.equals(field)) {
+            parent.remove(field);
+            parent.set(field, value);
+            return;
+        }
+        List<Map.Entry<String, JsonNode>> entries = new ArrayList<>();
+        for (String name : fieldNames(parent)) {
+            if (!name.equals(field)) {
+                entries.add(Map.entry(name, parent.get(name)));
+            }
+            if (name.equals(after)) {
+                entries.add(Map.entry(field, value));
+            }
+        }
+        parent.removeAll();
+        entries.forEach(entry -> parent.set(entry.getKey(), entry.getValue()));
+    }
 }
