@@ -6,6 +6,7 @@ import no.maddin.oasbuddy.core.document.DocumentFormat;
 import no.maddin.oasbuddy.core.document.DocumentReader;
 import no.maddin.oasbuddy.core.document.DocumentWriter;
 import no.maddin.oasbuddy.core.document.OasDocument;
+import no.maddin.oasbuddy.core.document.OasVersion;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -72,7 +73,7 @@ class SchemaValuesTest {
         schema.setReadOnly(true);
         schema.setDeprecated(true);
         schema.setDeprecated(false);
-        schema.setNullable(false);
+        schema.setNullable(false, OasVersion.V3_0);
 
         assertEquals(List.of("readOnly"), fieldNames(raw(document, "Id")));
     }
@@ -98,7 +99,7 @@ class SchemaValuesTest {
         size.setEnum(List.of(parse("1", size), parse("2", size), parse("3", size)));
         size.setDefault(parse("2", size));
         size.setExample(parse("3", size));
-        size.setNullable(true);
+        size.setNullable(true, OasVersion.V3_0);
         Schema code = document.getComponents().getSchemas().addSchema("Code");
         code.changeTypeTo("string");
         code.setDefault(parse("007", code));

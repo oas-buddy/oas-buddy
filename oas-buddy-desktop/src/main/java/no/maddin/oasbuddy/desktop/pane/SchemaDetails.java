@@ -12,6 +12,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import no.maddin.oasbuddy.core.document.OasVersion;
 import no.maddin.oasbuddy.core.model.Schema;
 import no.maddin.oasbuddy.core.model.SchemaValues;
 
@@ -132,7 +133,7 @@ final class SchemaDetails {
 
     private static Node flags(Schema schema) {
         return new HBox(16,
-                flag("Nullable", schema::isNullable, schema::setNullable),
+                flag("Nullable", schema::isNullable, nullable -> schema.setNullable(nullable, OasVersion.V3_0)),
                 flag("Read only", schema::isReadOnly, schema::setReadOnly),
                 flag("Write only", schema::isWriteOnly, schema::setWriteOnly),
                 flag("Deprecated", schema::isDeprecated, schema::setDeprecated));

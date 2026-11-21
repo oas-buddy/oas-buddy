@@ -10,6 +10,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.Tooltip;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
+import no.maddin.oasbuddy.core.document.OasVersion;
 import no.maddin.oasbuddy.core.model.Constraint;
 import no.maddin.oasbuddy.core.model.Schema;
 
@@ -28,6 +29,9 @@ import java.util.stream.Collectors;
  * ids, because one pane can show several of these editors.
  */
 final class SchemaConstraints {
+
+    /** The panes edit OAS 3.0 until they are told the document's version. */
+    private static final OasVersion VERSION = OasVersion.V3_0;
 
     static final String HIDDEN_NOTE = "schema-constraints-hidden";
 
@@ -71,7 +75,7 @@ final class SchemaConstraints {
 
     private Node control(Constraint constraint) {
         JsonNode current = schema.getConstraint(constraint);
-        if (constraint.kind() == Constraint.Kind.BOOLEAN) {
+        if (constraint.kind(VERSION) == Constraint.Kind.BOOLEAN) {
             CheckBox checkBox = new CheckBox();
             checkBox.getStyleClass().add(styleClass(constraint));
             checkBox.setSelected(current != null && current.asBoolean());
@@ -85,7 +89,7 @@ final class SchemaConstraints {
         field.getStyleClass().add(styleClass(constraint));
         field.textProperty().addListener((obs, oldVal, newVal) -> {
             try {
-                schema.setConstraint(constraint, constraint.parse(newVal));
+                schema.setConstraint(constraint, constraint.parse(newVal, VERSION));
                 field.pseudoClassStateChanged(Styles.STATE_DANGER, false);
                 field.setTooltip(null);
             } catch (IllegalArgumentException e) {

@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.node.TextNode;
 import no.maddin.oasbuddy.core.document.JsonNodes;
+import no.maddin.oasbuddy.core.document.OasVersion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,9 @@ public final class Schema {
     private static final String EXAMPLE = "example";
     private static final String PROPERTIES = "properties";
     private static final String REQUIRED = "required";
+    private static final String NULLABLE = "nullable";
+    /** The JSON type a 3.1 {@code type} array names to admit {@code null}. */
+    private static final String NULL = "null";
 
     private final ObjectNode node;
 
@@ -65,11 +69,57 @@ public final class Schema {
         return new ExternalDocs(node);
     }
 
+    /**
+     * The type. For a 3.1 {@code type} array it is the one type beside {@code "null"} —
+     * {@code [string, "null"]} is a nullable {@code string} — or {@code null} when the array names
+     * several real types, since there is then no single type to show.
+     */
     public String getType() {
+        if (node.get(TYPE) instanceof ArrayNode) {
+            List<String> real = getTypes().stream().filter(type -> !NULL.equals(type)).toList();
+            return real.size() == 1 ? real.getFirst() : null;
+        }
         return JsonNodes.text(node, TYPE);
     }
 
+    /**
+     * Every type named, in order and {@code "null"} included: one for a plain {@code type}, each
+     * element of a 3.1 {@code type} array, none when there is no {@code type}.
+     */
+    public List<String> getTypes() {
+        JsonNode type = node.get(TYPE);
+        List<String> types = new ArrayList<>();
+        if (type instanceof ArrayNode array) {
+            array.forEach(element -> types.add(element.asText()));
+        } else if (type != null && !type.isNull()) {
+            types.add(type.asText());
+        }
+        return types;
+    }
+
+    /**
+     * Sets the type, keeping the schema nullable if it is in the 3.1 sense: {@code "null"} stays in
+     * the {@code type} array, in its place, beside the new type. Anything else in the array goes.
+     * {@code null} removes the key.
+     */
     public void setType(String type) {
+        if (type != null && node.get(TYPE) instanceof ArrayNode types && contains(types, NULL)) {
+            ArrayNode replaced = node.arrayNode();
+            boolean written = false;
+            for (JsonNode element : types) {
+                if (NULL.equals(element.asText())) {
+                    replaced.add(element);
+                } else if (!written) {
+                    replaced.add(type);
+                    written = true;
+                }
+            }
+            if (!written) {
+                replaced.insert(0, type);
+            }
+            node.set(TYPE, replaced);
+            return;
+        }
         JsonNodes.setText(node, TYPE, type);
     }
 
@@ -154,12 +204,58 @@ public final class Schema {
         setValue(EXAMPLE, value);
     }
 
+    /** Nullable in either form: {@code nullable: true} (3.0) or {@code "null"} in a type array (3.1). */
     public boolean isNullable() {
-        return flag("nullable");
+        return flag(NULLABLE) || node.get(TYPE) instanceof ArrayNode types && contains(types, NULL);
     }
 
-    public void setNullable(boolean nullable) {
-        setFlag("nullable", nullable);
+    /**
+     * Makes the schema admit {@code null} in the form the version uses: the {@code nullable} flag in
+     * 3.0, {@code "null"} added to the {@code type} in 3.1. A 3.1 schema without a type already
+     * admits {@code null} along with everything else, so nothing is written for it — {@code type:
+     * ["null"]} would admit null <em>only</em>.
+     *
+     * <p>Clearing removes both forms, whichever the file has, collapsing a {@code [x, "null"]} pair
+     * back to a plain {@code x}.
+     */
+    public void setNullable(boolean nullable, OasVersion version) {
+        if (!nullable) {
+            node.remove(NULLABLE);
+            removeNullType();
+        } else if (version != OasVersion.V3_1) {
+            setFlag(NULLABLE, true);
+        } else if (node.get(TYPE) instanceof ArrayNode types) {
+            if (!contains(types, NULL)) {
+                types.add(NULL);
+            }
+        } else if (getType() != null) {
+            node.set(TYPE, node.arrayNode().add(getType()).add(NULL));
+        }
+    }
+
+    private void removeNullType() {
+        if (!(node.get(TYPE) instanceof ArrayNode types)) {
+            return;
+        }
+        for (int i = types.size() - 1; i >= 0; i--) {
+            if (NULL.equals(types.get(i).asText())) {
+                types.remove(i);
+            }
+        }
+        if (types.size() == 1) {
+            node.set(TYPE, types.get(0));
+        } else if (types.isEmpty()) {
+            node.remove(TYPE);
+        }
+    }
+
+    private static boolean contains(ArrayNode array, String text) {
+        for (JsonNode element : array) {
+            if (text.equals(element.asText())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean isReadOnly() {

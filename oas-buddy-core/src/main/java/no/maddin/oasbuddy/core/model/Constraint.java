@@ -5,24 +5,27 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.TextNode;
+import no.maddin.oasbuddy.core.document.OasVersion;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
- * The JSON-Schema validation keywords OAS 3.0 keeps, each with the kind of value it takes and the
- * types it constrains. The one place that says so: the editor shows a constraint only for its own
- * types, and {@code validation.ConstraintCheck} checks values against the same kinds.
+ * The JSON-Schema validation keywords OAS keeps, each with the kind of value it takes and the types
+ * it constrains. The one place that says so: the editor shows a constraint only for its own types,
+ * and {@code validation.ConstraintCheck} checks values against the same kinds.
  *
- * <p>{@code exclusiveMinimum}/{@code exclusiveMaximum} are booleans modifying {@code minimum}/
- * {@code maximum} here — OAS 3.0 follows JSON Schema draft 4, not the numeric form of later drafts.
+ * <p>The kind can depend on the version. {@code exclusiveMinimum}/{@code exclusiveMaximum} are
+ * booleans modifying {@code minimum}/{@code maximum} in Swagger 2.0 and OAS 3.0, which follow JSON
+ * Schema draft 4; in OAS 3.1 (JSON Schema 2020-12) they are numbers, bounds of their own.
  */
 public enum Constraint {
     MINIMUM("minimum", "Minimum", Kind.NUMBER, Group.NUMERIC),
-    EXCLUSIVE_MINIMUM("exclusiveMinimum", "Exclusive minimum", Kind.BOOLEAN, Group.NUMERIC),
+    EXCLUSIVE_MINIMUM("exclusiveMinimum", "Exclusive minimum", Kind.BOOLEAN, Kind.NUMBER, Group.NUMERIC),
     MAXIMUM("maximum", "Maximum", Kind.NUMBER, Group.NUMERIC),
-    EXCLUSIVE_MAXIMUM("exclusiveMaximum", "Exclusive maximum", Kind.BOOLEAN, Group.NUMERIC),
+    EXCLUSIVE_MAXIMUM("exclusiveMaximum", "Exclusive maximum", Kind.BOOLEAN, Kind.NUMBER, Group.NUMERIC),
     MULTIPLE_OF("multipleOf", "Multiple of", Kind.NUMBER, Group.NUMERIC),
     MIN_LENGTH("minLength", "Min length", Kind.COUNT, Group.STRING),
     MAX_LENGTH("maxLength", "Max length", Kind.COUNT, Group.STRING),
@@ -57,12 +60,17 @@ public enum Constraint {
         }
     }
 
-    /** Lower/upper bound pairs, where the lower one above the upper one admits no value at all. */
-    public static final List<List<Constraint>> RANGES = List.of(
+    private static final List<List<Constraint>> RANGES = List.of(
             List.of(MINIMUM, MAXIMUM),
             List.of(MIN_LENGTH, MAX_LENGTH),
             List.of(MIN_ITEMS, MAX_ITEMS),
             List.of(MIN_PROPERTIES, MAX_PROPERTIES));
+
+    /** In 3.1 the exclusive bounds are numbers, so they pair up with the bounds too. */
+    private static final List<List<Constraint>> NUMERIC_EXCLUSIVE_RANGES = List.of(
+            List.of(EXCLUSIVE_MINIMUM, EXCLUSIVE_MAXIMUM),
+            List.of(MINIMUM, EXCLUSIVE_MAXIMUM),
+            List.of(EXCLUSIVE_MINIMUM, MAXIMUM));
 
     private static final ObjectMapper JSON = new ObjectMapper()
             .enable(DeserializationFeature.FAIL_ON_TRAILING_TOKENS);
@@ -70,13 +78,30 @@ public enum Constraint {
     private final String key;
     private final String label;
     private final Kind kind;
+    private final Kind oas31Kind;
     private final Group group;
 
     Constraint(String key, String label, Kind kind, Group group) {
+        this(key, label, kind, kind, group);
+    }
+
+    Constraint(String key, String label, Kind kind, Kind oas31Kind, Group group) {
         this.key = key;
         this.label = label;
         this.kind = kind;
+        this.oas31Kind = oas31Kind;
         this.group = group;
+    }
+
+    /**
+     * Lower/upper bound pairs, where the lower one above the upper one admits no value at all. Only
+     * a pair whose values are both numbers can be compared.
+     */
+    public static List<List<Constraint>> ranges(OasVersion version) {
+        if (version != OasVersion.V3_1) {
+            return RANGES;
+        }
+        return Stream.concat(RANGES.stream(), NUMERIC_EXCLUSIVE_RANGES.stream()).toList();
     }
 
     /** The constraints that apply to a type, in display order; none for a missing or other type. */
@@ -96,13 +121,14 @@ public enum Constraint {
         return label;
     }
 
-    public Kind kind() {
-        return kind;
+    /** What this constraint's value is in a document of the given version. */
+    public Kind kind(OasVersion version) {
+        return version == OasVersion.V3_1 ? oas31Kind : kind;
     }
 
-    /** Whether a value in the document is of this constraint's kind. */
-    public boolean accepts(JsonNode value) {
-        return switch (kind) {
+    /** Whether a value in a document of the given version is of this constraint's kind. */
+    public boolean accepts(JsonNode value, OasVersion version) {
+        return switch (kind(version)) {
             case NUMBER -> value.isNumber();
             case COUNT -> value.isIntegralNumber() && value.asLong() >= 0;
             case BOOLEAN -> value.isBoolean();
@@ -120,16 +146,17 @@ public enum Constraint {
      * @return the value, or {@code null} for blank text
      * @throws IllegalArgumentException if the text cannot be written as this kind of value
      */
-    public JsonNode parse(String text) {
+    public JsonNode parse(String text, OasVersion version) {
         if (text == null || text.isBlank()) {
             return null;
         }
-        if (kind == Kind.TEXT) {
+        Kind expected = kind(version);
+        if (expected == Kind.TEXT) {
             return TextNode.valueOf(text);
         }
         try {
             JsonNode value = JSON.readTree(text.strip());
-            boolean writable = kind == Kind.BOOLEAN ? value.isBoolean() : value.isNumber();
+            boolean writable = expected == Kind.BOOLEAN ? value.isBoolean() : value.isNumber();
             if (writable) {
                 return value;
             }
