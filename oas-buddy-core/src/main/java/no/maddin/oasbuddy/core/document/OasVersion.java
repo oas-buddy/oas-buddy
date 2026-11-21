@@ -14,18 +14,25 @@ import java.util.regex.Pattern;
  * otherwise), which values of that key it accepts, and the value a new document is created with.
  */
 public enum OasVersion {
-    V2_0("swagger", Pattern.compile("2\\.0"), "2.0"),
-    V3_0("openapi", Pattern.compile("3\\.0(\\.\\d+.*)?"), "3.0.3"),
-    V3_1("openapi", Pattern.compile("3\\.1(\\.\\d+.*)?"), "3.1.0");
+    V2_0("swagger", Pattern.compile("2\\.0"), "2.0", "Swagger 2.0"),
+    V3_0("openapi", Pattern.compile("3\\.0(\\.\\d+.*)?"), "3.0.3", "OpenAPI 3.0"),
+    V3_1("openapi", Pattern.compile("3\\.1(\\.\\d+.*)?"), "3.1.0", "OpenAPI 3.1");
 
     private final String key;
     private final Pattern accepts;
     private final String newDocumentVersion;
+    private final String label;
 
-    OasVersion(String key, Pattern accepts, String newDocumentVersion) {
+    OasVersion(String key, Pattern accepts, String newDocumentVersion, String label) {
         this.key = key;
         this.accepts = accepts;
         this.newDocumentVersion = newDocumentVersion;
+        this.label = label;
+    }
+
+    /** The name a person knows the version by: {@code Swagger 2.0}, {@code OpenAPI 3.1}. */
+    public String label() {
+        return label;
     }
 
     /** The root key that declares this version: {@code swagger} or {@code openapi}. */

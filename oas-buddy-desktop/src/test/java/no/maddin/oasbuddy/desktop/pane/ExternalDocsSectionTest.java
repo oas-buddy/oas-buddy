@@ -7,6 +7,7 @@ import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 import no.maddin.oasbuddy.core.document.DocumentFormat;
 import no.maddin.oasbuddy.core.document.OasDocument;
+import no.maddin.oasbuddy.core.document.OasVersion;
 import no.maddin.oasbuddy.core.model.HttpMethod;
 import no.maddin.oasbuddy.core.model.Operation;
 import org.junit.jupiter.api.Test;
@@ -32,7 +33,7 @@ class ExternalDocsSectionTest extends ApplicationTest {
         document.getTags().add("pets");
         document.getComponents().getSchemas().addSchema("Pet");
         operation = document.getPaths().addPath("/pets").addOperation(HttpMethod.GET);
-        show(InfoPane.build(document.getInfo(), document.getExternalDocs()));
+        show(InfoPane.build(document.getInfo(), document.getExternalDocs(), OasVersion.V3_0));
     }
 
     private void show(Node pane) {
@@ -90,7 +91,7 @@ class ExternalDocsSectionTest extends ApplicationTest {
     void externalDocsThatIsNotAnObjectIsShownButNotRewritten() {
         document.getRoot().put("externalDocs", "oops");
 
-        show(InfoPane.build(document.getInfo(), document.getExternalDocs()));
+        show(InfoPane.build(document.getInfo(), document.getExternalDocs(), OasVersion.V3_0));
 
         assertTrue(lookup("." + ExternalDocsSection.URL_CLASS).tryQuery().isEmpty());
         assertEquals("oops", document.getRoot().get("externalDocs").asText());

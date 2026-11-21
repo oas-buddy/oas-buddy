@@ -1,6 +1,7 @@
 package no.maddin.oasbuddy.desktop.pane;
 
 import no.maddin.oasbuddy.core.document.OasDocument;
+import no.maddin.oasbuddy.core.document.OasVersion;
 import no.maddin.oasbuddy.core.model.Schema;
 import atlantafx.base.theme.Styles;
 import javafx.geometry.HPos;
@@ -78,6 +79,8 @@ public final class SchemaPane {
                              Consumer<String> onRemoveSchema) {
         Schema schema = document.getComponents().getSchemas().getSchema(schemaName);
         List<String> schemaNames = document.getComponents().getSchemas().names();
+        // A document of no version this editor knows is edited as 3.0, the version validation assumes too.
+        OasVersion version = document.getVersion().orElse(OasVersion.V3_0);
 
         TextField nameField = FormFields.renameField(schemaName, () -> schemaNames,
                 "A schema named \"%s\" already exists.", candidate -> onRenameSchema.test(schemaName, candidate));
@@ -114,7 +117,7 @@ public final class SchemaPane {
         Node additionalControls = additionalPropertiesControls(schema, schemaNames);
         grid.addRow(row, additionalLabel, additionalControls);
 
-        SchemaConstraints constraints = new SchemaConstraints(schema);
+        SchemaConstraints constraints = new SchemaConstraints(schema, version);
         constraints.node().setId("schema-constraints");
 
         Runnable showRowsForType = () -> {
@@ -134,10 +137,10 @@ public final class SchemaPane {
             constraints.refresh();
         });
 
-        Node values = SchemaDetails.build(schema, false);
+        Node values = SchemaDetails.build(schema, false, version);
         values.setId("schema-values");
 
-        PropertyRows properties = new PropertyRows(schema, schemaNames, propertiesGrid(), new HashSet<>());
+        PropertyRows properties = new PropertyRows(schema, schemaNames, version, propertiesGrid(), new HashSet<>());
         properties.refresh();
 
         TextField propertyNameField = new TextField();
@@ -243,7 +246,8 @@ public final class SchemaPane {
      * The property rows, rebuilt whenever a change decides which cells a row has. Which rows have
      * their details open is pane state, kept across rebuilds so a type change does not fold them.
      */
-    private record PropertyRows(Schema schema, List<String> schemaNames, GridPane grid, Set<String> expanded) {
+    private record PropertyRows(Schema schema, List<String> schemaNames, OasVersion version, GridPane grid,
+                                Set<String> expanded) {
 
         void refresh() {
             grid.getChildren().clear();
@@ -292,8 +296,8 @@ public final class SchemaPane {
 
             if (!reference && expanded.contains(name)) {
                 // A type change rebuilds these rows, so the constraints follow the type without a refresh.
-                VBox details = new VBox(10, SchemaDetails.build(property, true),
-                        FormFields.columnHeading("Constraints"), new SchemaConstraints(property).node());
+                VBox details = new VBox(10, SchemaDetails.build(property, true, version),
+                        FormFields.columnHeading("Constraints"), new SchemaConstraints(property, version).node());
                 details.getStyleClass().add(Styles.BORDERED);
                 grid.add(details, 1, row++, COLUMNS - 1, 1);
             }

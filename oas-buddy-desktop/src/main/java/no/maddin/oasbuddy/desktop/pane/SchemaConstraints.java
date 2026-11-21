@@ -30,16 +30,16 @@ import java.util.stream.Collectors;
  */
 final class SchemaConstraints {
 
-    /** The panes edit OAS 3.0 until they are told the document's version. */
-    private static final OasVersion VERSION = OasVersion.V3_0;
-
     static final String HIDDEN_NOTE = "schema-constraints-hidden";
 
     private final Schema schema;
+    /** Decides what kind of value a keyword takes: the exclusive bounds are flags in 3.0, numbers in 3.1. */
+    private final OasVersion version;
     private final VBox box = new VBox(10);
 
-    SchemaConstraints(Schema schema) {
+    SchemaConstraints(Schema schema, OasVersion version) {
         this.schema = schema;
+        this.version = version;
         box.getStyleClass().add("schema-constraints");
         refresh();
     }
@@ -75,7 +75,7 @@ final class SchemaConstraints {
 
     private Node control(Constraint constraint) {
         JsonNode current = schema.getConstraint(constraint);
-        if (constraint.kind(VERSION) == Constraint.Kind.BOOLEAN) {
+        if (constraint.kind(version) == Constraint.Kind.BOOLEAN) {
             CheckBox checkBox = new CheckBox();
             checkBox.getStyleClass().add(styleClass(constraint));
             checkBox.setSelected(current != null && current.asBoolean());
@@ -89,7 +89,7 @@ final class SchemaConstraints {
         field.getStyleClass().add(styleClass(constraint));
         field.textProperty().addListener((obs, oldVal, newVal) -> {
             try {
-                schema.setConstraint(constraint, constraint.parse(newVal, VERSION));
+                schema.setConstraint(constraint, constraint.parse(newVal, version));
                 field.pseudoClassStateChanged(Styles.STATE_DANGER, false);
                 field.setTooltip(null);
             } catch (IllegalArgumentException e) {

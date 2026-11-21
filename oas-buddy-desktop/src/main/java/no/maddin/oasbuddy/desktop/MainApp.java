@@ -4,6 +4,7 @@ import no.maddin.oasbuddy.core.document.DocumentFormat;
 import no.maddin.oasbuddy.core.document.DocumentReader;
 import no.maddin.oasbuddy.core.document.DocumentWriter;
 import no.maddin.oasbuddy.core.document.OasDocument;
+import no.maddin.oasbuddy.core.document.OasVersion;
 import no.maddin.oasbuddy.core.model.HttpMethod;
 import no.maddin.oasbuddy.core.model.Operation;
 import no.maddin.oasbuddy.core.model.PathItem;
@@ -64,6 +65,9 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.ToggleGroup;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -75,6 +79,7 @@ import javafx.stage.Stage;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -167,7 +172,7 @@ public class MainApp extends Application {
 
         refreshOutline();
 
-        stage.setTitle(APP_NAME);
+        updateTitle();
         stage.getIcons().addAll(AppIcon.icons(16, 32, 48, 64, 128, 256));
         stage.setScene(new Scene(root, 1100, 750));
         stage.show();
@@ -180,6 +185,14 @@ public class MainApp extends Application {
     }
 
     private MenuBar buildMenuBar(boolean darkTheme) {
+        // 3.0 comes first and takes the shortcut: it is the default, as for the document shown on start.
+        MenuItem new30 = new MenuItem(OasVersion.V3_0.label());
+        new30.setAccelerator(new KeyCodeCombination(KeyCode.N, KeyCombination.SHORTCUT_DOWN));
+        new30.setOnAction(e -> newDocument(OasVersion.V3_0));
+        MenuItem new31 = new MenuItem(OasVersion.V3_1.label());
+        new31.setOnAction(e -> newDocument(OasVersion.V3_1));
+        Menu newMenu = new Menu("New", null, new30, new31);
+
         MenuItem open = new MenuItem("Open...");
         open.setOnAction(e -> openFile());
 
@@ -192,7 +205,7 @@ public class MainApp extends Application {
         MenuItem exit = new MenuItem("Exit");
         exit.setOnAction(e -> Platform.exit());
 
-        Menu fileMenu = new Menu("File", null, open, save, saveAs, exit);
+        Menu fileMenu = new Menu("File", null, newMenu, open, save, saveAs, exit);
 
         ToggleGroup themeGroup = new ToggleGroup();
         RadioMenuItem lightThemeItem = new RadioMenuItem("Light");
@@ -257,6 +270,7 @@ public class MainApp extends Application {
             currentFile = file.toPath();
             refreshOutline();
             validationList.getItems().clear();
+            updateTitle();
         } catch (Exception e) {
             showError("Could not open file", e.getMessage());
         }
@@ -297,6 +311,7 @@ public class MainApp extends Application {
     private void writeToFile(Path file) {
         try {
             DocumentWriter.write(document, file);
+            updateTitle();
             runValidation();
         } catch (IOException | UnsupportedOperationException e) {
             showError("Could not save file", e.getMessage());
@@ -329,7 +344,8 @@ public class MainApp extends Application {
         root.setExpanded(true);
 
         root.getChildren().add(new TreeItem<>(
-                new OutlineNode("Info", () -> InfoPane.build(document.getInfo(), document.getExternalDocs()))));
+                new OutlineNode("Info", () -> InfoPane.build(document.getInfo(), document.getExternalDocs(),
+                        document.getVersion().orElse(OasVersion.V3_0)))));
         root.getChildren().add(new TreeItem<>(
                 new OutlineNode("Servers", () -> ServersPane.build(document))));
         root.getChildren().add(new TreeItem<>(new OutlineNode(
@@ -466,6 +482,29 @@ public class MainApp extends Application {
             }
         }
         outlineView.getSelectionModel().select(item);
+    }
+
+    /**
+     * Replaces the document with a new, empty one of {@code version}. Like Open, it does not ask
+     * first: the editor does not track unsaved changes yet. Package-private for the tests.
+     */
+    void newDocument(OasVersion version) {
+        document = OasDocument.newDocument(DocumentFormat.YAML, version);
+        currentFile = null;
+        refreshOutline();
+        validationList.getItems().clear();
+        updateTitle();
+    }
+
+    private void updateTitle() {
+        stage.setTitle(windowTitle(currentFile, document.getVersion()));
+    }
+
+    /** {@code api.yaml (OpenAPI 3.1) — OAS Buddy}; a document not yet saved is "Untitled". */
+    static String windowTitle(Path file, Optional<OasVersion> version) {
+        String name = file == null ? "Untitled" : file.getFileName().toString();
+        String declared = version.map(OasVersion::label).orElse("unknown OpenAPI version");
+        return name + " (" + declared + ") — " + APP_NAME;
     }
 
     private String titleOrDefault() {
