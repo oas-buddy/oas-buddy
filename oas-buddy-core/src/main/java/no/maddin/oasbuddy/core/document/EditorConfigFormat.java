@@ -44,6 +44,13 @@ public final class EditorConfigFormat {
     private static final String TAB = "tab";
 
     private static final Map<String, Boolean> BOOLEAN = Map.of("true", true, "false", false);
+    /**
+     * Only {@code true} is applied. {@code false} is what IntelliJ exports whenever its "ensure a final
+     * line break" option is off, and IntelliJ and VS Code read it as "don't add one", never as "strip
+     * it". Taken literally, as the EditorConfig spec words it, every YAML file saved in such a
+     * repository would lose its newline — so it counts as unset, and the format's default applies.
+     */
+    private static final Map<String, Boolean> FINAL_NEWLINE = Map.of("true", true);
     /** Whether to indent with tabs. */
     private static final Map<String, Boolean> INDENT_STYLE = Map.of(TAB, true, "space", false);
     /**
@@ -91,7 +98,7 @@ public final class EditorConfigFormat {
                 lookup(ARRAY_WRAPPING, values.get("ij_json_array_wrapping")),
                 lookup(BOOLEAN, values.get("ij_yaml_indent_sequence_value")),
                 lookup(END_OF_LINE, values.get("end_of_line")),
-                lookup(BOOLEAN, values.get("insert_final_newline")));
+                lookup(FINAL_NEWLINE, values.get("insert_final_newline")));
     }
 
     /** {@code indent_size = tab} means "as wide as a tab", i.e. {@code tab_width}. */

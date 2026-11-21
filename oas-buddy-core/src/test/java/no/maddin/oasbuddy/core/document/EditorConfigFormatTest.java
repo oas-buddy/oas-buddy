@@ -9,6 +9,7 @@ import java.nio.file.Path;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
  * Reading formatting from {@code .editorconfig}. Every test directory declares {@code root = true}, so
@@ -105,6 +106,17 @@ class EditorConfigFormatTest {
             assertEquals(false, EditorConfigFormat.from(Map.of("ij_json_array_wrapping", wrapping))
                     .jsonArraysOnePerLine(), wrapping);
         }
+    }
+
+    /**
+     * IntelliJ exports {@code insert_final_newline = false} whenever its "ensure a final line break"
+     * option is off, meaning "don't add one", not "strip it" — read that way, a file keeps the
+     * format's own default rather than losing its newline on every save.
+     */
+    @Test
+    void aFalseFinalNewlineMeansDoNotAddOneNotStripIt() {
+        assertNull(EditorConfigFormat.from(Map.of("insert_final_newline", "false")).finalNewline());
+        assertEquals(true, EditorConfigFormat.from(Map.of("insert_final_newline", "true")).finalNewline());
     }
 
     @Test
