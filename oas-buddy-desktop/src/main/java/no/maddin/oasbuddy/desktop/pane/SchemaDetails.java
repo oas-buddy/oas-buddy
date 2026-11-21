@@ -45,8 +45,10 @@ final class SchemaDetails {
     /**
      * @param withTitleAndDescription whether to include those two — the schema pane already shows
      *                                them in its main form, a property's details row does not
+     * @param version                 decides how "Nullable" is written: the {@code nullable} flag in 3.0,
+     *                                {@code "null"} in the type in 3.1
      */
-    static Node build(Schema schema, boolean withTitleAndDescription) {
+    static Node build(Schema schema, boolean withTitleAndDescription, OasVersion version) {
         GridPane grid = FormFields.grid();
         int row = 0;
         if (withTitleAndDescription) {
@@ -56,7 +58,7 @@ final class SchemaDetails {
         valueRow(grid, row++, "Default", DEFAULT, schema, schema::getDefault, schema::setDefault);
         valueRow(grid, row++, "Example", EXAMPLE, schema, schema::getExample, schema::setExample);
         grid.addRow(row++, new Label("Enum"), enumEditor(schema));
-        grid.addRow(row, new Label("Flags"), flags(schema));
+        grid.addRow(row, new Label("Flags"), flags(schema, version));
         return grid;
     }
 
@@ -131,9 +133,9 @@ final class SchemaDetails {
         write.run();
     }
 
-    private static Node flags(Schema schema) {
+    private static Node flags(Schema schema, OasVersion version) {
         return new HBox(16,
-                flag("Nullable", schema::isNullable, nullable -> schema.setNullable(nullable, OasVersion.V3_0)),
+                flag("Nullable", schema::isNullable, nullable -> schema.setNullable(nullable, version)),
                 flag("Read only", schema::isReadOnly, schema::setReadOnly),
                 flag("Write only", schema::isWriteOnly, schema::setWriteOnly),
                 flag("Deprecated", schema::isDeprecated, schema::setDeprecated));
