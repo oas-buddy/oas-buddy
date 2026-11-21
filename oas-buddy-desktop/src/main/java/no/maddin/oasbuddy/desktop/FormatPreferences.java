@@ -63,7 +63,7 @@ final class FormatPreferences {
         try {
             int size = Integer.parseInt(value);
             return size > 0 ? size : null;
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             return null;
         }
     }

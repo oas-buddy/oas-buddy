@@ -107,7 +107,7 @@ public final class EditorConfigFormat {
         try {
             int number = Integer.parseInt(value);
             return number > 0 ? number : null;
-        } catch (NumberFormatException e) {
+        } catch (NumberFormatException _) {
             return null;
         }
     }
