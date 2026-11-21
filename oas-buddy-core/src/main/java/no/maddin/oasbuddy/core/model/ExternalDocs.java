@@ -15,32 +15,17 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * reads as empty and is {@link #isEditable() not editable}: writing would replace it, and the
  * editor never rewrites what it cannot show.
  */
-public final class ExternalDocs {
-
-    private final OptionalObject object;
+public final class ExternalDocs extends OptionalObject {
 
     public ExternalDocs(ObjectNode parent) {
-        this.object = new OptionalObject(parent, "externalDocs");
-    }
-
-    /** {@code false} when the key holds something other than an object; see the class comment. */
-    public boolean isEditable() {
-        return object.isEditable();
+        super(parent, "externalDocs");
     }
 
     public String getDescription() {
-        return object.read("description");
+        return read("description");
     }
 
     public void setDescription(String description) {
-        object.write("description", description);
-    }
-
-    public String getUrl() {
-        return object.read("url");
-    }
-
-    public void setUrl(String url) {
-        object.write("url", url);
+        write("description", description);
     }
 }

@@ -13,8 +13,11 @@ import no.maddin.oasbuddy.core.document.JsonNodes;
  * A key that exists but holds something other than an object reads as empty and is not
  * {@link #isEditable() editable}: writing would replace it, and the editor never rewrites what it
  * cannot show.
+ *
+ * <p>All three of these objects carry a {@code url}, so its accessors live here; each subclass adds
+ * only its own fields.
  */
-final class OptionalObject {
+abstract class OptionalObject {
 
     private final ObjectNode parent;
     private final String field;
@@ -24,17 +27,27 @@ final class OptionalObject {
         this.field = field;
     }
 
-    boolean isEditable() {
+    /** {@code false} when the key holds something other than an object; see the class comment. */
+    public boolean isEditable() {
         JsonNode existing = parent.get(field);
         return existing == null || existing instanceof ObjectNode;
     }
 
-    String read(String name) {
+    public String getUrl() {
+        return read("url");
+    }
+
+    /** A blank or {@code null} value removes the field. */
+    public void setUrl(String url) {
+        write("url", url);
+    }
+
+    final String read(String name) {
         return parent.get(field) instanceof ObjectNode node ? JsonNodes.text(node, name) : null;
     }
 
     /** A blank or {@code null} value removes the field. */
-    void write(String name, String value) {
+    final void write(String name, String value) {
         if (!isEditable()) {
             return;
         }

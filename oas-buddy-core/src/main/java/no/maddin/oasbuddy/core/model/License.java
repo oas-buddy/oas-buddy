@@ -10,40 +10,26 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
  * {@code url} there. Both are editable; a document carrying both, or an identifier in 3.0, is left
  * for validation to report rather than repaired here.
  */
-public final class License {
+public final class License extends OptionalObject {
 
-    private final OptionalObject object;
-
-    License(ObjectNode info) {
-        this.object = new OptionalObject(info, "license");
-    }
-
-    public boolean isEditable() {
-        return object.isEditable();
+    License(ObjectNode parent) {
+        super(parent, "license");
     }
 
     public String getName() {
-        return object.read("name");
+        return read("name");
     }
 
     public void setName(String name) {
-        object.write("name", name);
-    }
-
-    public String getUrl() {
-        return object.read("url");
-    }
-
-    public void setUrl(String url) {
-        object.write("url", url);
+        write("name", name);
     }
 
     /** OAS 3.1: the license as an SPDX expression. */
     public String getIdentifier() {
-        return object.read("identifier");
+        return read("identifier");
     }
 
     public void setIdentifier(String identifier) {
-        object.write("identifier", identifier);
+        write("identifier", identifier);
     }
 }
