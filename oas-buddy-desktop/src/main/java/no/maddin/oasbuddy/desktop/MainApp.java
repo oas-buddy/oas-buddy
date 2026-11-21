@@ -28,6 +28,7 @@ import no.maddin.oasbuddy.desktop.pane.ComponentRemoval;
 import no.maddin.oasbuddy.desktop.pane.ComponentCatalog;
 import no.maddin.oasbuddy.desktop.pane.ExamplePane;
 import no.maddin.oasbuddy.desktop.pane.HeaderPane;
+import no.maddin.oasbuddy.desktop.pane.ImportOnlyPane;
 import no.maddin.oasbuddy.desktop.pane.LinkPane;
 import no.maddin.oasbuddy.desktop.pane.ParameterPane;
 import no.maddin.oasbuddy.desktop.pane.ResponsePane;
@@ -126,6 +127,8 @@ public class MainApp extends Application {
     private Path currentFile;
 
     private TreeView<OutlineNode> outlineView;
+    private MenuItem saveItem;
+    private MenuItem saveAsItem;
     private BorderPane centerHolder;
     private ListView<String> validationList;
 
@@ -172,7 +175,7 @@ public class MainApp extends Application {
 
         refreshOutline();
 
-        updateTitle();
+        updateWindowState();
         stage.getIcons().addAll(AppIcon.icons(16, 32, 48, 64, 128, 256));
         stage.setScene(new Scene(root, 1100, 750));
         stage.show();
@@ -196,16 +199,16 @@ public class MainApp extends Application {
         MenuItem open = new MenuItem("Open...");
         open.setOnAction(e -> openFile());
 
-        MenuItem save = new MenuItem("Save");
-        save.setOnAction(e -> save());
+        saveItem = new MenuItem("Save");
+        saveItem.setOnAction(e -> save());
 
-        MenuItem saveAs = new MenuItem("Save As...");
-        saveAs.setOnAction(e -> saveAs());
+        saveAsItem = new MenuItem("Save As...");
+        saveAsItem.setOnAction(e -> saveAs());
 
         MenuItem exit = new MenuItem("Exit");
         exit.setOnAction(e -> Platform.exit());
 
-        Menu fileMenu = new Menu("File", null, newMenu, open, save, saveAs, exit);
+        Menu fileMenu = new Menu("File", null, newMenu, open, saveItem, saveAsItem, exit);
 
         ToggleGroup themeGroup = new ToggleGroup();
         RadioMenuItem lightThemeItem = new RadioMenuItem("Light");
@@ -262,21 +265,33 @@ public class MainApp extends Application {
                 new FileChooser.ExtensionFilter("OpenAPI files", "*.yaml", "*.yml", "*.json"),
                 new FileChooser.ExtensionFilter("All files", "*.*"));
         var file = chooser.showOpenDialog(stage);
-        if (file == null) {
-            return;
+        if (file != null) {
+            open(file.toPath());
         }
+    }
+
+    /** Package-private so tests can open a file without the native chooser, which TestFX cannot drive. */
+    void open(Path file) {
         try {
-            document = DocumentReader.read(file.toPath());
-            currentFile = file.toPath();
+            document = DocumentReader.read(file);
+            currentFile = file;
             refreshOutline();
             validationList.getItems().clear();
-            updateTitle();
+            updateWindowState();
         } catch (Exception e) {
             showError("Could not open file", e.getMessage());
         }
     }
 
+    /** A Swagger 2.0 document is import-only: it is never written, only converted. */
+    private boolean isImportOnly() {
+        return document.getVersion().orElse(null) == OasVersion.V2_0;
+    }
+
     private void save() {
+        if (isImportOnly()) {
+            return;
+        }
         if (currentFile == null) {
             saveAs();
             return;
@@ -292,6 +307,9 @@ public class MainApp extends Application {
      * extension to a name typed without one.
      */
     private void saveAs() {
+        if (isImportOnly()) {
+            return;
+        }
         FileChooser chooser = new FileChooser();
         chooser.setTitle("Save OpenAPI document");
         var yamlFilter = new FileChooser.ExtensionFilter("YAML files", "*.yaml", "*.yml");
@@ -311,7 +329,7 @@ public class MainApp extends Application {
     private void writeToFile(Path file) {
         try {
             DocumentWriter.write(document, file);
-            updateTitle();
+            updateWindowState();
             runValidation();
         } catch (IOException | UnsupportedOperationException e) {
             showError("Could not save file", e.getMessage());
@@ -342,6 +360,10 @@ public class MainApp extends Application {
     void refreshOutline() {
         TreeItem<OutlineNode> root = new TreeItem<>(new OutlineNode(titleOrDefault(), null));
         root.setExpanded(true);
+        if (isImportOnly()) {
+            showImportOnly(root);
+            return;
+        }
 
         root.getChildren().add(new TreeItem<>(
                 new OutlineNode("Info", () -> InfoPane.build(document.getInfo(), document.getExternalDocs(),
@@ -405,6 +427,20 @@ public class MainApp extends Application {
 
         outlineView.setRoot(root);
         outlineView.setShowRoot(true);
+    }
+
+    /**
+     * A 2.0 document gets one outline node and no editor panes: the 3.x panes would offer what a 2.0
+     * file cannot hold. The node is selected, so its note shows straight away.
+     */
+    private void showImportOnly(TreeItem<OutlineNode> root) {
+        // No conversion is wired in yet, so the pane shows its convert buttons disabled.
+        TreeItem<OutlineNode> note = new TreeItem<>(new OutlineNode(
+                OasVersion.V2_0.label() + " (read-only)", () -> ImportOnlyPane.build(document, null)));
+        root.getChildren().add(note);
+        outlineView.setRoot(root);
+        outlineView.setShowRoot(true);
+        outlineView.getSelectionModel().select(note);
     }
 
     /** An expanded outline section: its list pane, then one child per entry. */
@@ -493,11 +529,14 @@ public class MainApp extends Application {
         currentFile = null;
         refreshOutline();
         validationList.getItems().clear();
-        updateTitle();
+        updateWindowState();
     }
 
-    private void updateTitle() {
+    /** The title, and whether the document may be saved — never for an import-only one. */
+    private void updateWindowState() {
         stage.setTitle(windowTitle(currentFile, document.getVersion()));
+        saveItem.setDisable(isImportOnly());
+        saveAsItem.setDisable(isImportOnly());
     }
 
     /** {@code api.yaml (OpenAPI 3.1) — OAS Buddy}; a document not yet saved is "Untitled". */
