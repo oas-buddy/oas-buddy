@@ -113,6 +113,63 @@ class ConstraintCheckTest {
         assertEquals(List.of(), messages);
     }
 
+    /** In 3.1 the exclusive bounds are numbers, so a boolean is what is wrong. */
+    @Test
+    void in31TheExclusiveBoundsMustBeNumbers() {
+        List<String> messages = messages31("""
+                components:
+                  schemas:
+                    Age:
+                      type: integer
+                      exclusiveMinimum: 0
+                      exclusiveMaximum: true
+                """);
+
+        assertEquals(List.of("components.schemas.Age.exclusiveMaximum must be a number, but is true"), messages);
+    }
+
+    @Test
+    void in31ExclusiveBoundsThatAdmitNoValueAreReported() {
+        List<String> messages = messages31("""
+                components:
+                  schemas:
+                    Age:
+                      type: integer
+                      exclusiveMinimum: 10
+                      maximum: 2
+                """);
+
+        assertEquals(List.of("components.schemas.Age: exclusiveMinimum (10) is greater than maximum (2),"
+                + " so no value can satisfy it"), messages);
+    }
+
+    /** Everything that is the same in both versions is checked in 3.1 too, nullable type arrays and all. */
+    @Test
+    void in31TheOtherConstraintsAreCheckedAsBefore() {
+        List<String> messages = messages31("""
+                components:
+                  schemas:
+                    Name:
+                      type: [string, 'null']
+                      minLength: 10
+                      maxLength: 2
+                """);
+
+        assertEquals(List.of("components.schemas.Name: minLength (10) is greater than maxLength (2),"
+                + " so no value can satisfy it"), messages);
+    }
+
+    private List<String> messages31(String body) {
+        String document = """
+                openapi: 3.1.0
+                info:
+                  title: t
+                  version: '1'
+                paths: {}
+                """ + body;
+        return validator.validate(document).messages().stream().map(ValidationMessage::message).toList();
+    }
+
     private List<String> messages(String body) {
         String document = """
                 openapi: 3.0.3

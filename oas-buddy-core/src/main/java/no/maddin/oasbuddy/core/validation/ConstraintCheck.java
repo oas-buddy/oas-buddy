@@ -25,8 +25,9 @@ import java.util.stream.Stream;
  * <p>Reusable schemas live under {@code components.schemas} in 3.x and under {@code definitions} in
  * Swagger 2.0; everywhere else both versions reach a schema through a {@code schema} key.
  *
- * <p>Not run for 3.1 yet: {@link Constraint} states the 3.0 rules, under which 3.1's numeric
- * {@code exclusiveMinimum}/{@code exclusiveMaximum} would be reported as errors.
+ * <p>What kind of value a keyword takes can depend on the version — {@code exclusiveMinimum} is a
+ * boolean in 2.0 and 3.0 but a number in 3.1 — which {@link Constraint} states, so the version is
+ * passed along to it.
  */
 final class ConstraintCheck {
 
@@ -48,22 +49,20 @@ final class ConstraintCheck {
 
     static List<ValidationMessage> check(JsonNode root, OasVersion version) {
         List<ValidationMessage> messages = new ArrayList<>();
-        if (version == OasVersion.V3_1) {
-            return messages;
-        }
         boolean swagger20 = version == OasVersion.V2_0;
         JsonNode schemas = swagger20 ? root.path(DEFINITIONS) : root.path("components").path("schemas");
         String prefix = swagger20 ? DEFINITIONS + "." : "components.schemas.";
         if (schemas instanceof ObjectNode schemaMap) {
             schemaMap.properties().forEach(entry ->
-                    checkSchema(entry.getValue(), prefix + entry.getKey(), messages));
+                    checkSchema(entry.getValue(), prefix + entry.getKey(), version, messages));
         }
-        findSchemaFields(root, "", messages);
+        findSchemaFields(root, "", version, messages);
         return messages;
     }
 
     /** Everything outside component schemas reaches its schemas through a {@code schema} key. */
-    private static void findSchemaFields(JsonNode node, String location, List<ValidationMessage> messages) {
+    private static void findSchemaFields(JsonNode node, String location, OasVersion version,
+                                         List<ValidationMessage> messages) {
         if (node instanceof ObjectNode objectNode) {
             for (Map.Entry<String, JsonNode> entry : objectNode.properties()) {
                 String key = entry.getKey();
@@ -72,67 +71,71 @@ final class ConstraintCheck {
                     continue;
                 }
                 if (location.isEmpty() && key.equals("components")) {
-                    findSchemaFieldsOutsideComponentSchemas(entry.getValue(), childLocation, messages);
+                    findSchemaFieldsOutsideComponentSchemas(entry.getValue(), childLocation, version, messages);
                 } else if (key.equals("schema")) {
-                    checkSchema(entry.getValue(), childLocation, messages);
+                    checkSchema(entry.getValue(), childLocation, version, messages);
                 } else if (!DATA.contains(key)) {
-                    findSchemaFields(entry.getValue(), childLocation, messages);
+                    findSchemaFields(entry.getValue(), childLocation, version, messages);
                 }
             }
         } else if (node instanceof ArrayNode arrayNode) {
             for (int i = 0; i < arrayNode.size(); i++) {
-                findSchemaFields(arrayNode.get(i), location + "[" + i + "]", messages);
+                findSchemaFields(arrayNode.get(i), location + "[" + i + "]", version, messages);
             }
         }
     }
 
     private static void findSchemaFieldsOutsideComponentSchemas(JsonNode components, String location,
+                                                                OasVersion version,
                                                                 List<ValidationMessage> messages) {
         if (components instanceof ObjectNode objectNode) {
             for (Map.Entry<String, JsonNode> entry : objectNode.properties()) {
                 if (!entry.getKey().equals("schemas")) {
-                    findSchemaFields(entry.getValue(), join(location, entry.getKey()), messages);
+                    findSchemaFields(entry.getValue(), join(location, entry.getKey()), version, messages);
                 }
             }
         }
     }
 
-    private static void checkSchema(JsonNode node, String location, List<ValidationMessage> messages) {
+    private static void checkSchema(JsonNode node, String location, OasVersion version,
+                                    List<ValidationMessage> messages) {
         if (!(node instanceof ObjectNode schema)) {
             return;
         }
-        checkValues(schema, location, messages);
-        checkRanges(schema, location, messages);
+        checkValues(schema, location, version, messages);
+        checkRanges(schema, location, version, messages);
 
         for (Map.Entry<String, JsonNode> entry : schema.properties()) {
             String key = entry.getKey();
             JsonNode value = entry.getValue();
             String childLocation = join(location, key);
             if (SCHEMA_FIELDS.contains(key)) {
-                checkSchema(value, childLocation, messages);
+                checkSchema(value, childLocation, version, messages);
             } else if (SCHEMA_MAPS.contains(key) && value instanceof ObjectNode map) {
                 map.properties().forEach(property ->
-                        checkSchema(property.getValue(), join(childLocation, property.getKey()), messages));
+                        checkSchema(property.getValue(), join(childLocation, property.getKey()), version, messages));
             } else if (SCHEMA_LISTS.contains(key) && value instanceof ArrayNode list) {
                 for (int i = 0; i < list.size(); i++) {
-                    checkSchema(list.get(i), childLocation + "[" + i + "]", messages);
+                    checkSchema(list.get(i), childLocation + "[" + i + "]", version, messages);
                 }
             }
         }
     }
 
-    private static void checkValues(ObjectNode schema, String location, List<ValidationMessage> messages) {
+    private static void checkValues(ObjectNode schema, String location, OasVersion version,
+                                    List<ValidationMessage> messages) {
         for (Constraint constraint : Constraint.values()) {
             JsonNode value = schema.get(constraint.key());
-            if (value != null && !constraint.accepts(value)) {
-                messages.add(error(join(location, constraint.key()) + " must be " + describe(constraint.kind())
+            if (value != null && !constraint.accepts(value, version)) {
+                messages.add(error(join(location, constraint.key()) + " must be " + describe(constraint.kind(version))
                         + ", but is " + value));
             }
         }
     }
 
-    private static void checkRanges(ObjectNode schema, String location, List<ValidationMessage> messages) {
-        for (List<Constraint> range : Constraint.RANGES) {
+    private static void checkRanges(ObjectNode schema, String location, OasVersion version,
+                                    List<ValidationMessage> messages) {
+        for (List<Constraint> range : Constraint.ranges(version)) {
             Constraint lower = range.get(0);
             Constraint upper = range.get(1);
             JsonNode low = schema.get(lower.key());
