@@ -109,6 +109,13 @@ public class MainApp extends Application {
     /** Overridden by tests, which cannot dismiss a modal dialog. */
     private Runnable aboutAction = this::showAbout;
 
+    /**
+     * Overridden by tests, which must never reach the real one: {@code getHostServices()} works
+     * even for an application JavaFX did not launch, and hands the url to {@code xdg-open}, which
+     * finds the user's running browser over the session bus — even from under Xvfb.
+     */
+    private Consumer<String> linkOpener = url -> getHostServices().showDocument(url);
+
     private Stage stage;
     private OasDocument document;
     private Path currentFile;
@@ -215,14 +222,13 @@ public class MainApp extends Application {
     /**
      * Hands a url to the desktop's own browser.
      *
-     * <p>Package-private so the tests can exercise the case that actually happens: {@code
-     * HostServices} only exists in an application JavaFX launched itself, and a desktop with no
-     * registered handler fails at {@code showDocument}. A dead About link is not worth a stack
-     * trace in the user's face, so either way this logs and returns.
+     * <p>A desktop with no registered handler fails at {@code showDocument}. A dead About link is
+     * not worth a stack trace in the user's face, so this logs and returns. Package-private so the
+     * tests can exercise that with a failing {@link #setLinkOpener link opener}.
      */
     void browse(String url) {
         try {
-            getHostServices().showDocument(url);
+            linkOpener.accept(url);
         } catch (RuntimeException e) {
             System.getLogger(MainApp.class.getName())
                     .log(System.Logger.Level.WARNING, "could not open " + url + " in a browser", e);
@@ -497,6 +503,10 @@ public class MainApp extends Application {
 
     void setAboutAction(Runnable aboutAction) {
         this.aboutAction = aboutAction;
+    }
+
+    void setLinkOpener(Consumer<String> linkOpener) {
+        this.linkOpener = linkOpener;
     }
 
     private record OutlineNode(String label, Supplier<Node> paneSupplier) {

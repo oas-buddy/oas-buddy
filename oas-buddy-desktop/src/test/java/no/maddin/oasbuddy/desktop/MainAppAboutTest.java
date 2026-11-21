@@ -40,11 +40,27 @@ class MainAppAboutTest extends ApplicationTest {
         assertEquals(List.of("about"), opened);
     }
 
+    /**
+     * Never let a test reach the real link opener: HostServices exists even for an application
+     * JavaFX did not launch, and it opens the url in the developer's running browser.
+     */
     @Test
-    void openingALinkIsANoOpWhenThereIsNoHostBrowser() {
-        // MainApp is constructed directly rather than launched, so JavaFX never gave it
-        // HostServices - exactly the situation a packaged app hits when the desktop has no handler.
-        assertDoesNotThrow(() -> interact(() -> app.browse("https://github.com/maddingo/oas-buddy")));
+    void aLinkIsHandedToTheLinkOpener() {
+        List<String> opened = new ArrayList<>();
+        app.setLinkOpener(opened::add);
+
+        interact(() -> app.browse("https://example.com/readme"));
+
+        assertEquals(List.of("https://example.com/readme"), opened);
+    }
+
+    @Test
+    void openingALinkIsANoOpWhenTheDesktopCannotOpenIt() {
+        app.setLinkOpener(url -> {
+            throw new IllegalStateException("no handler for " + url);
+        });
+
+        assertDoesNotThrow(() -> interact(() -> app.browse("https://example.com/readme")));
     }
 
     private MenuItem menuItem(String menuName, String itemName) {
