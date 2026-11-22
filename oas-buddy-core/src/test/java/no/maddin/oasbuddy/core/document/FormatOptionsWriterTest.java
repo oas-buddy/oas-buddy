@@ -54,7 +54,7 @@ class FormatOptionsWriterTest {
 
     @Test
     void jsonIndentAndArrayLayoutFollowTheOptions() {
-        String written = DocumentWriter.write(json(), new FormatOptions(4, null, true, null, LineEnding.LF, null));
+        String written = DocumentWriter.write(json(), new FormatOptions(4, null, JsonLayout.wrapping(ArrayWrapping.WRAP_ALWAYS), null, LineEnding.LF, null));
 
         assertTrue(written.contains("\n    \"info\": {\n        \"title\": \"Pets\""), written);
         assertTrue(written.contains("\"tags\": [\n        {\n            \"name\": \"pets\""), written);
@@ -163,12 +163,22 @@ class FormatOptionsWriterTest {
             for (Integer indent : new Integer[]{null, 1, 4, 10}) {
                 for (Boolean flag : new Boolean[]{null, true, false}) {
                     for (LineEnding lineEnding : new LineEnding[]{null, LineEnding.LF, LineEnding.CRLF}) {
-                        layouts.add(Arguments.of(format, new FormatOptions(indent, flag, flag, flag, lineEnding, flag)));
+                        layouts.add(Arguments.of(format,
+                                new FormatOptions(indent, flag, json(flag), flag, lineEnding, flag)));
                     }
                 }
             }
         }
         return layouts.stream();
+    }
+
+    /** An IntelliJ layout for {@code true} and {@code false}, Jackson's for {@code null}. */
+    private static JsonLayout json(Boolean flag) {
+        if (flag == null) {
+            return null;
+        }
+        return flag ? JsonLayout.wrapping(ArrayWrapping.WRAP_ALWAYS)
+                : new JsonLayout(ArrayWrapping.WRAP_IF_LONG, 40, true, true);
     }
 
     private static List<String> fieldOrder(JsonNode node) {

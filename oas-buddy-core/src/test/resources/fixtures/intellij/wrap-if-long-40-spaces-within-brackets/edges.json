@@ -1,0 +1,71 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Edge cases",
+    "version": "1"
+  },
+  "paths": {},
+  "x-edges": {
+    "short": [ "a", "b" ],
+    "long": [
+      "alpha", "bravo", "charlie",
+      "delta", "echo", "foxtrot",
+      "golf", "hotel", "india",
+      "juliett", "kilo", "lima", "mike",
+      "november", "oscar", "papa",
+      "quebec", "romeo", "sierra",
+      "tango"
+    ],
+    "emptyArray": [ ],
+    "emptyObject": {},
+    "nested": {
+      "deeper": {
+        "x": [
+          "one-long-element-value",
+          "two-long-element-value"
+        ]
+      }
+    },
+    "objects": [
+      {
+        "a": 1
+      }, {
+        "b": 2
+      }
+    ],
+    "single": [
+      "exactly-thirty-chars-xxxxxxx"
+    ],
+    "numbers": [ 1, 2.5, -3, [ 4, 5 ] ],
+    "mixed": [
+      1, {
+        "a": 1
+      }, 2
+    ],
+    "arrayOfArrayOfObject": [
+      [
+        {
+          "a": 1
+        }
+      ]
+    ],
+    "pairs": [
+      [ "aaaa", "bbbb" ],
+      [ "cccc", "dddd" ],
+      [ "eeee", "ffff" ]
+    ],
+    "objectsThenScalar": [
+      {
+        "a": 1
+      }, "tail"
+    ],
+    "scalars": [
+      true, false, null,
+      "esc \"q\" \\ \t", "ünïcödé"
+    ],
+    "emptyInside": [ [ ], {}, [ [ ] ] ],
+    "edge": [
+      "abcdefghijklmnopqr", "s"
+    ]
+  }
+}
