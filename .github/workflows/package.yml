@@ -6,11 +6,15 @@ on:
   push:
     tags: ['v*']
 
+# Read-only by default; each job that attaches files to the release asks for write itself (SonarCloud
+# githubactions:S8233 — a write grant belongs on the job that needs it, not on every job).
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   jpackage:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -45,7 +49,7 @@ jobs:
         run: mvn -B -DskipTests -Djpackage ${{ steps.version.outputs.mavenArgs }} package
 
       - name: Tar the portable app-image
-        # Only the Linux profile produces an APP_IMAGE (for a future AUR -bin package etc.);
+        # Only the Linux profile produces an APP_IMAGE (portable download, and what the aur job packages);
         # tar it and drop the raw directory so later globs of target/dist/* only see files.
         if: matrix.os == 'ubuntu-24.04'
         shell: bash
@@ -65,3 +69,103 @@ jobs:
         uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
         with:
           files: oas-buddy-desktop/target/dist/*
+
+  aur:
+    # Builds the Arch package (oas-buddy-bin) from the app-image the Linux job just made, checks it
+    # with namcap, and on a release tag publishes the PKGBUILD to the AUR. Runs on manual dispatch
+    # too, so a packaging change is tested without cutting a release; only the publish is skipped.
+    needs: jpackage
+    # needs: waits for the whole matrix, and one failed leg would otherwise skip this job. Only the
+    # Linux leg's artifact matters here; if that leg failed, the download step fails instead.
+    if: ${{ !cancelled() }}
+    permissions:
+      contents: write
+    runs-on: ubuntu-24.04
+    container: archlinux:base-devel
+    env:
+      # Passed via the environment, never interpolated into run: blocks (script injection).
+      REF_TYPE: ${{ github.ref_type }}
+      REF_NAME: ${{ github.ref_name }}
+      # Empty until an AUR account's key is stored as a secret; the publish step then only says so.
+      AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
+    steps:
+      - name: Install packaging tools
+        run: pacman -Syu --noconfirm --needed git openssh pacman-contrib namcap
+
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v8
+        with:
+          name: oas-buddy-ubuntu-24.04
+          path: artifact
+
+      - name: Prepare the PKGBUILD
+        # pkgver is a placeholder in the repository, like every other version there. The tarball is
+        # put where makepkg looks for the renamed source, so it is used instead of downloaded: on a
+        # tag these are the very bytes that were just attached to the release.
+        run: |
+          if [[ "$REF_TYPE" == "tag" ]]; then version="${REF_NAME#v}"; else version=0.0.0; fi
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          mkdir /tmp/aur
+          cp oas-buddy-desktop/src/main/aur/* /tmp/aur/
+          cp artifact/oas-buddy-linux-x86_64.tar.gz "/tmp/aur/oas-buddy-$version-x86_64.tar.gz"
+          sed -i "s/^pkgver=.*/pkgver=$version/" /tmp/aur/PKGBUILD
+
+      - name: Build and check the package
+        # makepkg refuses to run as root, and refuses to build without the runtime depends installed;
+        # installing them also gives namcap the real libraries to check the package's links against.
+        run: |
+          useradd --create-home builder
+          chown -R builder /tmp/aur
+          su builder -c 'cd /tmp/aur && updpkgsums && makepkg --printsrcinfo > .SRCINFO'
+          pacman -S --noconfirm --needed --asdeps $(sed -n 's/^\tdepends = //p' /tmp/aur/.SRCINFO)
+          su builder -c 'cd /tmp/aur && makepkg --force'
+          namcap /tmp/aur/PKGBUILD /tmp/aur/*.pkg.tar.zst
+          cat /tmp/aur/.SRCINFO
+          mkdir arch-dist
+          cp /tmp/aur/*.pkg.tar.zst arch-dist/
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: oas-buddy-archlinux
+          path: arch-dist/*
+          if-no-files-found: error
+
+      - name: Attach the package to the GitHub Release
+        # Installable with pacman -U straight from the release, for anyone without an AUR helper
+        # (and for as long as the AUR package does not exist).
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3 # v3
+        with:
+          files: arch-dist/*
+
+      - name: Publish to the AUR
+        if: github.ref_type == 'tag'
+        # Plain git over SSH rather than a third-party deploy action, so the AUR key is handed to no
+        # code outside this repository. The host key is pinned (fingerprint as published on
+        # aur.archlinux.org) instead of trusted on first use. The first push creates the package.
+        run: |
+          if [[ -z "$AUR_SSH_PRIVATE_KEY" ]]; then
+            echo "::notice::AUR_SSH_PRIVATE_KEY is not set, so oas-buddy-bin $VERSION was built but not published."
+            exit 0
+          fi
+          # Both files are named explicitly: in a container job $HOME is not the home directory
+          # ssh looks up for root, so a plain ~/.ssh would be written where ssh never reads.
+          ssh_dir=/tmp/aur-ssh
+          install -d -m 700 "$ssh_dir"
+          printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > "$ssh_dir/key"
+          chmod 600 "$ssh_dir/key"
+          echo 'aur.archlinux.org ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIEuBKrPzbawxA/k2g6NcyV5jmqwJ2s+zpgZGZ7tpLIcN' > "$ssh_dir/known_hosts"
+          export GIT_SSH_COMMAND="ssh -i $ssh_dir/key -o IdentitiesOnly=yes -o UserKnownHostsFile=$ssh_dir/known_hosts -o StrictHostKeyChecking=yes"
+          git clone ssh://aur@aur.archlinux.org/oas-buddy-bin.git /tmp/aur-repo
+          cp /tmp/aur/PKGBUILD /tmp/aur/.SRCINFO /tmp/aur/oas-buddy.desktop /tmp/aur-repo/
+          cd /tmp/aur-repo
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add PKGBUILD .SRCINFO oas-buddy.desktop
+          if git diff --cached --quiet; then
+            echo "::notice::The AUR already has oas-buddy-bin $VERSION; nothing to publish."
+            exit 0
+          fi
+          git commit -m "Update to $VERSION"
+          git push origin HEAD:master

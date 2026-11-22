@@ -65,13 +65,35 @@ Produces, in `oas-buddy-desktop/target/dist/`:
 | macOS | `.pkg` |
 | Windows | `.exe` |
 
-The Linux app-image is for direct download/manual install, and the future fetch target for an
-AUR `-bin` package on Arch/CachyOS (real AUR packaging isn't set up yet). The `package.yml`
-workflow tars it as `oas-buddy-linux-x86_64.tar.gz`.
+The Linux app-image is for direct download/manual install, and what the Arch package is built
+from (see below). The `package.yml` workflow tars it as `oas-buddy-linux-x86_64.tar.gz`.
 
 Each installer bundles its own JVM, so the target machine doesn't need Java installed. This is
 opt-in (`-Djpackage`) and only activates for the OS you're actually running on, so a plain
 `mvn package` is unaffected.
+
+### Arch Linux
+
+On Arch and its derivatives (CachyOS, Manjaro, EndeavourOS, …) install the package attached to the
+release, `oas-buddy-bin-X.Y.Z-1-x86_64.pkg.tar.zst`:
+
+```
+sudo pacman -U https://github.com/oas-buddy/oas-buddy/releases/download/vX.Y.Z/oas-buddy-bin-X.Y.Z-1-x86_64.pkg.tar.zst
+```
+
+pacman does not update a package installed this way; install the next release the same way. The
+package will also be published to the AUR as `oas-buddy-bin` (`yay -S oas-buddy-bin`), which does
+update — it is not there yet, because AUR account registration is closed for the moment.
+
+It repackages the release's app-image (own JVM, no Java dependency) into `/opt/oas-buddy`, adds the
+application menu entry and icon, and puts `oas-buddy` on `PATH` as `/usr/bin/oas-buddy`. The
+`PKGBUILD` lives in `oas-buddy-desktop/src/main/aur/`; the `package.yml` workflow builds the package
+on every release and publishes the `PKGBUILD` to the AUR once that is set up. To build it by hand,
+set `pkgver` in a copy of that directory to a released version, then:
+
+```
+updpkgsums && makepkg -si
+```
 
 ### Running it from a terminal on Linux
 

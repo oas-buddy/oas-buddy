@@ -1,0 +1,15 @@
+[Desktop Entry]
+# The Arch package's desktop entry. The app-image the package is built from has none (jpackage writes
+# one only for DEB and RPM), so this is a sibling of src/main/jpackage/linux/oas-buddy.desktop rather
+# than a copy of it: no jpackage placeholders, the launcher reached through PATH, and the icon by its
+# hicolor theme name, which pacman installs.
+Name=OAS Buddy
+Comment=Structured editor for OpenAPI specifications
+Exec=oas-buddy
+Icon=oas-buddy
+Terminal=false
+Type=Application
+# Has to equal the fully qualified name of MainApp, like the jpackage entry's; LinuxDesktopEntryTest
+# checks both.
+StartupWMClass=no.maddin.oasbuddy.desktop.MainApp
+Categories=Development;
