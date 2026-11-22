@@ -71,6 +71,9 @@ jobs:
     # with namcap, and on a release tag publishes the PKGBUILD to the AUR. Runs on manual dispatch
     # too, so a packaging change is tested without cutting a release; only the publish is skipped.
     needs: jpackage
+    # needs: waits for the whole matrix, and one failed leg would otherwise skip this job. Only the
+    # Linux leg's artifact matters here; if that leg failed, the download step fails instead.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-24.04
     container: archlinux:base-devel
     env:
