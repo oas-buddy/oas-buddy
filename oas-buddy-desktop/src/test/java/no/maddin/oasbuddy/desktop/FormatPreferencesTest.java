@@ -1,6 +1,8 @@
 package no.maddin.oasbuddy.desktop;
 
+import no.maddin.oasbuddy.core.document.ArrayWrapping;
 import no.maddin.oasbuddy.core.document.FormatOptions;
+import no.maddin.oasbuddy.core.document.JsonLayout;
 import no.maddin.oasbuddy.core.document.LineEnding;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +26,8 @@ class FormatPreferencesTest {
 
     @Test
     void everyOptionRoundTrips() {
-        FormatOptions options = new FormatOptions(4, true, true, false, LineEnding.CRLF, true);
+        FormatOptions options = new FormatOptions(4, true,
+                new JsonLayout(ArrayWrapping.CHOP_DOWN_IF_LONG, 100, true, false), false, LineEnding.CRLF, true);
 
         FormatPreferences.save(prefs, options);
 
@@ -33,7 +36,8 @@ class FormatPreferencesTest {
 
     @Test
     void anOptionSetBackToDefaultLeavesNoKey() {
-        FormatPreferences.save(prefs, new FormatOptions(4, true, true, true, LineEnding.LF, false));
+        FormatPreferences.save(prefs, new FormatOptions(4, true,
+                new JsonLayout(ArrayWrapping.WRAP_IF_LONG, 80, false, true), true, LineEnding.LF, false));
 
         FormatPreferences.save(prefs, FormatOptions.DEFAULTS);
 
@@ -45,6 +49,8 @@ class FormatPreferencesTest {
     void storedNonsenseReadsAsNotSet() {
         prefs.put(FormatPreferences.INDENT_SIZE, "wide");
         prefs.put(FormatPreferences.LINE_ENDING, "CR");
+        prefs.put(FormatPreferences.JSON_ARRAY_WRAPPING, "SOMETIMES");
+        prefs.put(FormatPreferences.MAX_LINE_LENGTH, "0");
 
         assertEquals(FormatOptions.DEFAULTS, FormatPreferences.load(prefs));
 

@@ -60,7 +60,7 @@ class EditorConfigFormatTest {
 
         assertEquals(new FormatOptions(4, null, null, true, null, null),
                 EditorConfigFormat.forFile(dir.resolve("api.yml")));
-        assertEquals(new FormatOptions(2, true, true, null, null, null),
+        assertEquals(new FormatOptions(2, true, JsonLayout.wrapping(ArrayWrapping.WRAP_ALWAYS), null, null, null),
                 EditorConfigFormat.forFile(dir.resolve("api.json")));
     }
 
@@ -96,16 +96,38 @@ class EditorConfigFormatTest {
         assertEquals(8, EditorConfigFormat.forFile(dir.resolve("api.json")).indentSize());
     }
 
+    /** The names IntelliJ's own export writes, one per setting in its code style dialog. */
     @Test
-    void intellijsWrappingValuesMapToOneElementPerLineOrNot() {
-        for (String wrapping : new String[]{"split_into_lines", "on_every_item"}) {
-            assertEquals(true, EditorConfigFormat.from(Map.of("ij_json_array_wrapping", wrapping))
-                    .jsonArraysOnePerLine(), wrapping);
-        }
-        for (String wrapping : new String[]{"off", "normal"}) {
-            assertEquals(false, EditorConfigFormat.from(Map.of("ij_json_array_wrapping", wrapping))
-                    .jsonArraysOnePerLine(), wrapping);
-        }
+    void intellijsWrappingValuesMapToItsFourSettings() {
+        Map<String, ArrayWrapping> expected = Map.of(
+                "off", ArrayWrapping.DO_NOT_WRAP,
+                "normal", ArrayWrapping.WRAP_IF_LONG,
+                "on_every_item", ArrayWrapping.CHOP_DOWN_IF_LONG,
+                "split_into_lines", ArrayWrapping.WRAP_ALWAYS);
+        expected.forEach((value, wrapping) -> assertEquals(wrapping,
+                EditorConfigFormat.from(Map.of("ij_json_array_wrapping", value)).json().arrayWrapping(), value));
+    }
+
+    @Test
+    void lineLengthAndBracketSpacingAreRead() {
+        JsonLayout json = EditorConfigFormat.from(Map.of(
+                "max_line_length", "100",
+                "ij_json_spaces_within_brackets", "true",
+                "ij_json_spaces_within_braces", "false")).json();
+
+        assertEquals(new JsonLayout(null, 100, true, false), json);
+    }
+
+    /** {@code off} is the standard's "no limit"; anything else that is not a positive number is skipped. */
+    @Test
+    void aLineLengthOfOffMeansNoLimit() {
+        assertEquals(JsonLayout.NO_LIMIT, lineLength("off"));
+        assertNull(lineLength("0"));
+        assertNull(lineLength("long"));
+    }
+
+    private static Integer lineLength(String value) {
+        return EditorConfigFormat.from(Map.of("max_line_length", value)).json().maxLineLength();
     }
 
     /**
@@ -130,6 +152,8 @@ class EditorConfigFormatTest {
                 end_of_line = cr
                 insert_final_newline = maybe
                 ij_json_array_wrapping = sometimes
+                ij_json_spaces_within_brackets = some
+                max_line_length = long
                 ij_yaml_indent_sequence_value = perhaps
                 """);
 
@@ -173,9 +197,9 @@ class EditorConfigFormatTest {
                 [*]
                 indent_size = 4
                 """);
-        FormatOptions preferences = new FormatOptions(2, null, true, true, LineEnding.CRLF, false);
+        FormatOptions preferences = new FormatOptions(2, null, JsonLayout.wrapping(ArrayWrapping.WRAP_ALWAYS), true, LineEnding.CRLF, false);
 
-        assertEquals(new FormatOptions(4, null, true, true, LineEnding.CRLF, false),
+        assertEquals(new FormatOptions(4, null, JsonLayout.wrapping(ArrayWrapping.WRAP_ALWAYS), true, LineEnding.CRLF, false),
                 EditorConfigFormat.forFile(dir.resolve("api.json")).orElse(preferences));
     }
 

@@ -18,9 +18,10 @@ import java.util.Map;
  * section precedence and the walk up to {@code root = true} are left to ec4j.
  *
  * <p>Read are the standard {@code indent_style}, {@code indent_size} (with {@code tab_width} for
- * {@code indent_size = tab}), {@code end_of_line} and {@code insert_final_newline}, and two of
- * IntelliJ's own keys for what the standard does not cover: {@code ij_json_array_wrapping} and
- * {@code ij_yaml_indent_sequence_value}. Reading IntelliJ's keys rather than inventing ours means a
+ * {@code indent_size = tab}), {@code end_of_line}, {@code insert_final_newline} and
+ * {@code max_line_length}, and IntelliJ's own keys for what the standard does not cover:
+ * {@code ij_json_array_wrapping}, {@code ij_json_spaces_within_brackets},
+ * {@code ij_json_spaces_within_braces} and {@code ij_yaml_indent_sequence_value}. Reading IntelliJ's keys rather than inventing ours means a
  * repository already formatted by IntelliJ comes out the same here.
  *
  * <p>A value this class does not understand is skipped, never an error: the option falls through to
@@ -53,13 +54,12 @@ public final class EditorConfigFormat {
     private static final Map<String, Boolean> FINAL_NEWLINE = Map.of("true", true);
     /** Whether to indent with tabs. */
     private static final Map<String, Boolean> INDENT_STYLE = Map.of(TAB, true, "space", false);
-    /**
-     * IntelliJ's wrapping values, as "one element per line": chop down and wrap always put every
-     * element on its own line; do not wrap and wrap-if-long keep them on one (this writer has no
-     * line-length budget to wrap against).
-     */
-    private static final Map<String, Boolean> ARRAY_WRAPPING = Map.of(
-            "split_into_lines", true, "on_every_item", true, "off", false, "normal", false);
+    /** IntelliJ's names for its four wrapping settings, as its own {@code .editorconfig} export writes them. */
+    private static final Map<String, ArrayWrapping> ARRAY_WRAPPING = Map.of(
+            "off", ArrayWrapping.DO_NOT_WRAP,
+            "normal", ArrayWrapping.WRAP_IF_LONG,
+            "on_every_item", ArrayWrapping.CHOP_DOWN_IF_LONG,
+            "split_into_lines", ArrayWrapping.WRAP_ALWAYS);
     /** {@code cr} is a valid EditorConfig value, but no OpenAPI tool expects it; it is not mapped. */
     private static final Map<String, LineEnding> END_OF_LINE = Map.of("lf", LineEnding.LF, "crlf", LineEnding.CRLF);
 
@@ -95,10 +95,26 @@ public final class EditorConfigFormat {
         return new FormatOptions(
                 indentSize(values),
                 lookup(INDENT_STYLE, values.get("indent_style")),
-                lookup(ARRAY_WRAPPING, values.get("ij_json_array_wrapping")),
+                json(values),
                 lookup(BOOLEAN, values.get("ij_yaml_indent_sequence_value")),
                 lookup(END_OF_LINE, values.get("end_of_line")),
                 lookup(FINAL_NEWLINE, values.get("insert_final_newline")));
+    }
+
+    private static JsonLayout json(Map<String, String> values) {
+        return new JsonLayout(
+                lookup(ARRAY_WRAPPING, values.get("ij_json_array_wrapping")),
+                maxLineLength(values.get("max_line_length")),
+                lookup(BOOLEAN, values.get("ij_json_spaces_within_brackets")),
+                lookup(BOOLEAN, values.get("ij_json_spaces_within_braces")));
+    }
+
+    /** {@code off} is the standard's "no limit". */
+    private static Integer maxLineLength(String value) {
+        if ("off".equals(value)) {
+            return JsonLayout.NO_LIMIT;
+        }
+        return positiveInteger(value);
     }
 
     /** {@code indent_size = tab} means "as wide as a tab", i.e. {@code tab_width}. */

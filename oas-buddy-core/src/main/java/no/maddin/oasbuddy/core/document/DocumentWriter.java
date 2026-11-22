@@ -86,13 +86,11 @@ public final class DocumentWriter {
         String lineEnding = options.lineEnding() == null ? DefaultIndenter.SYS_LF : options.lineEnding().text();
         String indent = Boolean.TRUE.equals(options.indentWithTabs())
                 ? "\t" : " ".repeat(Math.max(1, indentSize(options)));
-        DefaultIndenter indenter = new DefaultIndenter(indent, lineEnding);
-        DefaultPrettyPrinter printer = JSON_PRINTER.withObjectIndenter(indenter);
-        if (Boolean.TRUE.equals(options.jsonArraysOnePerLine())) {
-            // the default keeps arrays on one line: [ "a", "b" ]
-            printer = printer.withArrayIndenter(indenter);
-        }
-        String text = DocumentReader.mapperFor(DocumentFormat.JSON).writer(printer).writeValueAsString(root);
+        String text = options.json().arrayWrapping() == null
+                ? DocumentReader.mapperFor(DocumentFormat.JSON)
+                        .writer(JSON_PRINTER.withObjectIndenter(new DefaultIndenter(indent, lineEnding)))
+                        .writeValueAsString(root)
+                : IntellijJsonWriter.write(root, options.json(), indent, indentSize(options), lineEnding);
         // JSON has always been written without a final newline
         return Boolean.TRUE.equals(options.finalNewline()) ? text + lineEnding : text;
     }

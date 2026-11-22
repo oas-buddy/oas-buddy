@@ -1,9 +1,14 @@
 package no.maddin.oasbuddy.desktop;
 
+import no.maddin.oasbuddy.core.document.ArrayWrapping;
 import no.maddin.oasbuddy.core.document.FormatOptions;
+import no.maddin.oasbuddy.core.document.JsonLayout;
 import no.maddin.oasbuddy.core.document.LineEnding;
 
+import java.util.Arrays;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.prefs.Preferences;
 
 /**
@@ -15,7 +20,10 @@ final class FormatPreferences {
 
     static final String INDENT_SIZE = "format.indentSize";
     static final String INDENT_WITH_TABS = "format.indentWithTabs";
-    static final String JSON_ARRAYS_ONE_PER_LINE = "format.jsonArraysOnePerLine";
+    static final String JSON_ARRAY_WRAPPING = "format.jsonArrayWrapping";
+    static final String MAX_LINE_LENGTH = "format.maxLineLength";
+    static final String JSON_SPACES_WITHIN_BRACKETS = "format.jsonSpacesWithinBrackets";
+    static final String JSON_SPACES_WITHIN_BRACES = "format.jsonSpacesWithinBraces";
     static final String YAML_INDENT_SEQUENCES = "format.yamlIndentSequences";
     static final String LINE_ENDING = "format.lineEnding";
     static final String FINAL_NEWLINE = "format.finalNewline";
@@ -23,6 +31,8 @@ final class FormatPreferences {
     private static final Map<String, Boolean> BOOLEANS = Map.of("true", true, "false", false);
     private static final Map<String, LineEnding> LINE_ENDINGS = Map.of(
             LineEnding.LF.name(), LineEnding.LF, LineEnding.CRLF.name(), LineEnding.CRLF);
+    private static final Map<String, ArrayWrapping> ARRAY_WRAPPINGS = Arrays.stream(ArrayWrapping.values())
+            .collect(Collectors.toMap(Enum::name, Function.identity()));
 
     private FormatPreferences() {
     }
@@ -31,7 +41,7 @@ final class FormatPreferences {
         return new FormatOptions(
                 integer(prefs.get(INDENT_SIZE, null)),
                 bool(prefs.get(INDENT_WITH_TABS, null)),
-                bool(prefs.get(JSON_ARRAYS_ONE_PER_LINE, null)),
+                json(prefs),
                 bool(prefs.get(YAML_INDENT_SEQUENCES, null)),
                 lineEnding(prefs.get(LINE_ENDING, null)),
                 bool(prefs.get(FINAL_NEWLINE, null)));
@@ -40,10 +50,21 @@ final class FormatPreferences {
     static void save(Preferences prefs, FormatOptions options) {
         put(prefs, INDENT_SIZE, options.indentSize());
         put(prefs, INDENT_WITH_TABS, options.indentWithTabs());
-        put(prefs, JSON_ARRAYS_ONE_PER_LINE, options.jsonArraysOnePerLine());
+        put(prefs, JSON_ARRAY_WRAPPING, options.json().arrayWrapping());
+        put(prefs, MAX_LINE_LENGTH, options.json().maxLineLength());
+        put(prefs, JSON_SPACES_WITHIN_BRACKETS, options.json().spacesWithinBrackets());
+        put(prefs, JSON_SPACES_WITHIN_BRACES, options.json().spacesWithinBraces());
         put(prefs, YAML_INDENT_SEQUENCES, options.yamlIndentSequences());
         put(prefs, LINE_ENDING, options.lineEnding());
         put(prefs, FINAL_NEWLINE, options.finalNewline());
+    }
+
+    private static JsonLayout json(Preferences prefs) {
+        return new JsonLayout(
+                lookup(ARRAY_WRAPPINGS, prefs.get(JSON_ARRAY_WRAPPING, null)),
+                integer(prefs.get(MAX_LINE_LENGTH, null)),
+                bool(prefs.get(JSON_SPACES_WITHIN_BRACKETS, null)),
+                bool(prefs.get(JSON_SPACES_WITHIN_BRACES, null)));
     }
 
     /** {@code null} removes the key, so an option set back to "Default" leaves no trace. */
