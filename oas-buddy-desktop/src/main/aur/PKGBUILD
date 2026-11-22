@@ -1,0 +1,42 @@
+# Maintainer: OAS Buddy <https://github.com/oas-buddy/oas-buddy>
+#
+# Repackages the portable app-image every release attaches (oas-buddy-linux-x86_64.tar.gz): jpackage's
+# own launcher plus a bundled Java runtime, so nothing here depends on an installed Java.
+#
+# pkgver and sha256sums are placeholders, like every version checked into this repository: the aur job
+# in .github/workflows/package.yml sets pkgver from the release tag and fills the checksums with
+# updpkgsums before it publishes. To build by hand, set pkgver to a released version, run updpkgsums,
+# then makepkg -si.
+pkgname=oas-buddy-bin
+pkgver=0.0.0
+pkgrel=1
+pkgdesc="Structured editor for OpenAPI specifications (3.0 and 3.1, imports Swagger 2.0)"
+arch=('x86_64')
+url="https://github.com/oas-buddy/oas-buddy"
+license=('Apache-2.0')
+# What the bundled runtime's and JavaFX's native libraries link against (readelf -d, minus what the
+# bundle ships itself); namcap in the aur job reports any that go missing.
+depends=('alsa-lib' 'at-spi2-core' 'cairo' 'fontconfig' 'freetype2' 'gdk-pixbuf2' 'glib2' 'glibc'
+         'gtk3' 'libglvnd' 'libx11' 'libxext' 'libxi' 'libxrender' 'libxtst' 'libxxf86vm' 'pango')
+provides=('oas-buddy')
+conflicts=('oas-buddy')
+# The bundled runtime is a jlink image: stripping it, or splitting debug symbols out of it, is not
+# makepkg's business.
+options=('!strip' '!debug')
+# The release asset's name carries no version, so each download is renamed to one that does.
+source=("oas-buddy-$pkgver.tar.gz::$url/releases/download/v$pkgver/oas-buddy-linux-x86_64.tar.gz"
+        "oas-buddy.desktop")
+sha256sums=('SKIP'
+            'SKIP')
+
+package() {
+  install -d "$pkgdir/opt"
+  cp -a oas-buddy "$pkgdir/opt/"
+
+  install -d "$pkgdir/usr/bin"
+  ln -s /opt/oas-buddy/bin/oas-buddy "$pkgdir/usr/bin/oas-buddy"
+
+  install -Dm644 oas-buddy.desktop "$pkgdir/usr/share/applications/oas-buddy.desktop"
+  install -Dm644 oas-buddy/lib/app/oas-buddy.svg \
+    "$pkgdir/usr/share/icons/hicolor/scalable/apps/oas-buddy.svg"
+}

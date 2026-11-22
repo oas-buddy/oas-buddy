@@ -1,6 +1,7 @@
 package no.maddin.oasbuddy.desktop;
 
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -19,21 +20,22 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * compiles, packages and starts exactly as before, and the only symptom is a taskbar entry that
  * falls back to a generic icon and window title.
  *
- * <p>The entry is packaging input rather than a classpath resource, so it is read from the source
- * tree — see {@code jpackage.resourceDir} in the POM.
+ * <p>There are two entries: jpackage's, for the DEB and RPM, and the Arch package's, which the
+ * app-image it repackages does not contain. Both are packaging input rather than classpath
+ * resources, so they are read from the source tree — see {@code jpackage.resourceDir} in the POM
+ * and {@code src/main/aur/PKGBUILD}.
  */
 class LinuxDesktopEntryTest {
 
-    private static final String RELATIVE_PATH = "src/main/jpackage/linux/oas-buddy.desktop";
-
-    @Test
-    void startupWmClassNamesTheApplicationClass() throws IOException {
-        List<String> values = Files.readAllLines(desktopEntry()).stream()
+    @ParameterizedTest
+    @ValueSource(strings = {"src/main/jpackage/linux/oas-buddy.desktop", "src/main/aur/oas-buddy.desktop"})
+    void startupWmClassNamesTheApplicationClass(String relativePath) throws IOException {
+        List<String> values = Files.readAllLines(desktopEntry(relativePath)).stream()
                 .filter(line -> line.startsWith("StartupWMClass="))
                 .map(line -> line.substring("StartupWMClass=".length()))
                 .toList();
 
-        assertEquals(1, values.size(), "expected exactly one StartupWMClass in " + RELATIVE_PATH);
+        assertEquals(1, values.size(), "expected exactly one StartupWMClass in " + relativePath);
         assertEquals(MainApp.class.getName(), values.getFirst(),
                 "StartupWMClass must match the WM_CLASS JavaFX derives from the Application subclass");
     }
@@ -42,10 +44,10 @@ class LinuxDesktopEntryTest {
      * Surefire runs with the module directory as the working directory; an IDE may use the repo
      * root instead, so both are tried before giving up.
      */
-    private static Path desktopEntry() {
-        Path fromModule = Path.of(RELATIVE_PATH);
-        Path candidate = Files.exists(fromModule) ? fromModule : Path.of("oas-buddy-desktop", RELATIVE_PATH);
-        assertTrue(Files.exists(candidate), "cannot find " + RELATIVE_PATH + " from " + Path.of("").toAbsolutePath());
+    private static Path desktopEntry(String relativePath) {
+        Path fromModule = Path.of(relativePath);
+        Path candidate = Files.exists(fromModule) ? fromModule : Path.of("oas-buddy-desktop", relativePath);
+        assertTrue(Files.exists(candidate), "cannot find " + relativePath + " from " + Path.of("").toAbsolutePath());
         return candidate;
     }
 }
