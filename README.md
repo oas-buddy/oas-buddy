@@ -74,12 +74,18 @@ opt-in (`-Djpackage`) and only activates for the OS you're actually running on, 
 
 ### Arch Linux
 
-On Arch and its derivatives (CachyOS, Manjaro, EndeavourOS, …) install the package attached to the
-release, `oas-buddy-bin-X.Y.Z-1-x86_64.pkg.tar.zst`:
+On Arch and its derivatives (CachyOS, Manjaro, EndeavourOS, …) download the package attached to the
+release, `oas-buddy-bin-X.Y.Z-1-x86_64.pkg.tar.zst`, and install the downloaded file:
 
 ```
-sudo pacman -U https://github.com/oas-buddy/oas-buddy/releases/download/vX.Y.Z/oas-buddy-bin-X.Y.Z-1-x86_64.pkg.tar.zst
+curl -LO https://github.com/oas-buddy/oas-buddy/releases/download/vX.Y.Z/oas-buddy-bin-X.Y.Z-1-x86_64.pkg.tar.zst
+sudo pacman -U ./oas-buddy-bin-X.Y.Z-1-x86_64.pkg.tar.zst
 ```
+
+Download it first rather than handing pacman the URL: the package is not signed, and by default
+pacman insists on a signature for a package it fetches itself (`RemoteFileSigLevel` falls back to
+`SigLevel = Required`), failing with a 404 for the `.sig` file. A package file already on disk falls
+under `LocalFileSigLevel = Optional` and installs unsigned, just like a package built from the AUR.
 
 pacman does not update a package installed this way; install the next release the same way. The
 package will also be published to the AUR as `oas-buddy-bin` (`yay -S oas-buddy-bin`), which does
