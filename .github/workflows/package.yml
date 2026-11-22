@@ -108,7 +108,7 @@ jobs:
           echo "VERSION=$version" >> "$GITHUB_ENV"
           mkdir /tmp/aur
           cp oas-buddy-desktop/src/main/aur/* /tmp/aur/
-          cp artifact/oas-buddy-linux-x86_64.tar.gz "/tmp/aur/oas-buddy-$version.tar.gz"
+          cp artifact/oas-buddy-linux-x86_64.tar.gz "/tmp/aur/oas-buddy-$version-x86_64.tar.gz"
           sed -i "s/^pkgver=.*/pkgver=$version/" /tmp/aur/PKGBUILD
 
       - name: Build and check the package

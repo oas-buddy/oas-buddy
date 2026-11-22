@@ -15,19 +15,22 @@ arch=('x86_64')
 url="https://github.com/oas-buddy/oas-buddy"
 license=('Apache-2.0')
 # What the bundled runtime's and JavaFX's native libraries link against (readelf -d, minus what the
-# bundle ships itself); namcap in the aur job reports any that go missing.
+# bundle ships itself), plus the icon theme the icon is installed into. namcap calls the GTK stack
+# "may not be needed": JavaFX keeps its native libraries inside its jars and unpacks them at run
+# time, so namcap never sees what links against them.
 depends=('alsa-lib' 'at-spi2-core' 'cairo' 'fontconfig' 'freetype2' 'gdk-pixbuf2' 'glib2' 'glibc'
-         'gtk3' 'libglvnd' 'libx11' 'libxext' 'libxi' 'libxrender' 'libxtst' 'libxxf86vm' 'pango')
+         'gtk3' 'hicolor-icon-theme' 'libglvnd' 'libx11' 'libxext' 'libxi' 'libxrender' 'libxtst'
+         'libxxf86vm' 'pango')
 provides=('oas-buddy')
 conflicts=('oas-buddy')
 # The bundled runtime is a jlink image: stripping it, or splitting debug symbols out of it, is not
 # makepkg's business.
 options=('!strip' '!debug')
 # The release asset's name carries no version, so each download is renamed to one that does.
-source=("oas-buddy-$pkgver.tar.gz::$url/releases/download/v$pkgver/oas-buddy-linux-x86_64.tar.gz"
-        "oas-buddy.desktop")
-sha256sums=('SKIP'
-            'SKIP')
+source=("oas-buddy.desktop")
+source_x86_64=("oas-buddy-$pkgver-x86_64.tar.gz::$url/releases/download/v$pkgver/oas-buddy-linux-$CARCH.tar.gz")
+sha256sums=('SKIP')
+sha256sums_x86_64=('SKIP')
 
 package() {
   install -d "$pkgdir/opt"
