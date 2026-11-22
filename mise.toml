@@ -1,3 +1,7 @@
 [tools]
 java = "25.0.2"
 maven = "latest"
+
+[tasks.ui]
+description = "Run Desktop application"
+run = "mvn install -DskipTests && cd oas-buddy-desktop && mvn javafx:run"
