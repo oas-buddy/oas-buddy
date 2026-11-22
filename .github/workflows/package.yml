@@ -112,11 +112,14 @@ jobs:
           sed -i "s/^pkgver=.*/pkgver=$version/" /tmp/aur/PKGBUILD
 
       - name: Build and check the package
-        # makepkg refuses to run as root.
+        # makepkg refuses to run as root, and refuses to build without the runtime depends installed;
+        # installing them also gives namcap the real libraries to check the package's links against.
         run: |
           useradd --create-home builder
           chown -R builder /tmp/aur
-          su builder -c 'cd /tmp/aur && updpkgsums && makepkg --printsrcinfo > .SRCINFO && makepkg --force'
+          su builder -c 'cd /tmp/aur && updpkgsums && makepkg --printsrcinfo > .SRCINFO'
+          pacman -S --noconfirm --needed --asdeps $(sed -n 's/^\tdepends = //p' /tmp/aur/.SRCINFO)
+          su builder -c 'cd /tmp/aur && makepkg --force'
           namcap /tmp/aur/PKGBUILD /tmp/aur/*.pkg.tar.zst
           cat /tmp/aur/.SRCINFO
           mkdir arch-dist
