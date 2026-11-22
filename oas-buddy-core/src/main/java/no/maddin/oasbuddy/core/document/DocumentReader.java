@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory;
+import com.fasterxml.jackson.dataformat.yaml.YAMLFactoryBuilder;
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator;
 
 import java.io.IOException;
@@ -55,12 +56,19 @@ public final class DocumentReader {
             // on its own MINIMIZE_QUOTES only keeps the quotes around YAML's reserved words (true,
             // null, ...), so the string "3.0" would be written as a bare 3.0 and read back as a
             // number. DocumentWriterTest guards that case.
-            case YAML -> new ObjectMapper(YAMLFactory.builder()
-                    .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
-                    .disable(YAMLGenerator.Feature.SPLIT_LINES)
-                    .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
-                    .enable(YAMLGenerator.Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS)
-                    .build());
+            case YAML -> new ObjectMapper(yamlFactory().build());
         };
+    }
+
+    /**
+     * The YAML factory every mapper here starts from. {@link DocumentWriter} adds its layout options on
+     * top of the same features rather than repeating them.
+     */
+    static YAMLFactoryBuilder yamlFactory() {
+        return YAMLFactory.builder()
+                .disable(YAMLGenerator.Feature.WRITE_DOC_START_MARKER)
+                .disable(YAMLGenerator.Feature.SPLIT_LINES)
+                .enable(YAMLGenerator.Feature.MINIMIZE_QUOTES)
+                .enable(YAMLGenerator.Feature.ALWAYS_QUOTE_NUMBERS_AS_STRINGS);
     }
 }

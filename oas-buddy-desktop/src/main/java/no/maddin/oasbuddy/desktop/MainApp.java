@@ -5,6 +5,8 @@ import no.maddin.oasbuddy.core.convert.OasConverter;
 import no.maddin.oasbuddy.core.document.DocumentFormat;
 import no.maddin.oasbuddy.core.document.DocumentReader;
 import no.maddin.oasbuddy.core.document.DocumentWriter;
+import no.maddin.oasbuddy.core.document.EditorConfigFormat;
+import no.maddin.oasbuddy.core.document.FormatOptions;
 import no.maddin.oasbuddy.core.document.OasDocument;
 import no.maddin.oasbuddy.core.document.OasVersion;
 import no.maddin.oasbuddy.core.model.HttpMethod;
@@ -44,6 +46,7 @@ import no.maddin.oasbuddy.desktop.pane.SecuritySchemeCatalog;
 import no.maddin.oasbuddy.desktop.pane.SecuritySchemePane;
 import no.maddin.oasbuddy.desktop.pane.SecuritySchemeRemoval;
 import no.maddin.oasbuddy.desktop.pane.SecuritySchemesPane;
+import no.maddin.oasbuddy.desktop.pane.SettingsDialog;
 import no.maddin.oasbuddy.desktop.pane.ServersPane;
 import no.maddin.oasbuddy.desktop.pane.TagCatalog;
 import no.maddin.oasbuddy.desktop.pane.TagRemoval;
@@ -126,6 +129,15 @@ public class MainApp extends Application {
     /** Overridden by tests, which cannot dismiss a modal dialog. */
     private Runnable aboutAction = this::showAbout;
 
+    /** Overridden by tests, which cannot dismiss a modal dialog. */
+    private Runnable settingsAction = this::showSettings;
+
+    /**
+     * The user's formatting preferences: the fallback for what a document's {@code .editorconfig}
+     * leaves open. Loaded on start; tests replace them in memory, never in the user's real store.
+     */
+    private FormatOptions formatPreferences = FormatOptions.DEFAULTS;
+
     /**
      * Overridden by tests, which must never reach the real one: {@code getHostServices()} works
      * even for an application JavaFX did not launch, and hands the url to {@code xdg-open}, which
@@ -156,6 +168,7 @@ public class MainApp extends Application {
         setTheme(darkTheme);
 
         this.stage = primaryStage;
+        this.formatPreferences = FormatPreferences.load(PREFS);
         this.document = OasDocument.newDocument(DocumentFormat.YAML);
 
         BorderPane root = new BorderPane();
@@ -223,10 +236,13 @@ public class MainApp extends Application {
         saveAsItem = new MenuItem("Save As...");
         saveAsItem.setOnAction(e -> saveAs());
 
+        MenuItem settings = new MenuItem("Settings...");
+        settings.setOnAction(e -> settingsAction.run());
+
         MenuItem exit = new MenuItem("Exit");
         exit.setOnAction(e -> Platform.exit());
 
-        Menu fileMenu = new Menu("File", null, newMenu, open, saveItem, saveAsItem, exit);
+        Menu fileMenu = new Menu("File", null, newMenu, open, saveItem, saveAsItem, settings, exit);
 
         ToggleGroup themeGroup = new ToggleGroup();
         RadioMenuItem lightThemeItem = new RadioMenuItem("Light");
@@ -250,6 +266,13 @@ public class MainApp extends Application {
         Menu helpMenu = new Menu("Help", null, about);
 
         return new MenuBar(fileMenu, documentMenu, viewMenu, helpMenu);
+    }
+
+    private void showSettings() {
+        SettingsDialog.show(stage, formatPreferences).ifPresent(options -> {
+            formatPreferences = options;
+            FormatPreferences.save(PREFS, options);
+        });
     }
 
     private void showAbout() {
@@ -355,7 +378,8 @@ public class MainApp extends Application {
 
     private void writeToFile(Path file) {
         try {
-            DocumentWriter.write(document, file);
+            // the repository's .editorconfig first, the user's preferences for whatever it leaves open
+            DocumentWriter.write(document, file, EditorConfigFormat.forFile(file).orElse(formatPreferences));
             updateWindowState();
             runValidation();
         } catch (IOException | UnsupportedOperationException e) {
@@ -677,6 +701,15 @@ public class MainApp extends Application {
 
     void setConversionConfirmation(RemovalConfirmation conversionConfirmation) {
         this.conversionConfirmation = conversionConfirmation;
+    }
+
+    void setSettingsAction(Runnable settingsAction) {
+        this.settingsAction = settingsAction;
+    }
+
+    /** Replaces the preferences for this run only; the user's stored ones are left alone. */
+    void setFormatPreferences(FormatOptions formatPreferences) {
+        this.formatPreferences = formatPreferences;
     }
 
     void setAboutAction(Runnable aboutAction) {
