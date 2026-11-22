@@ -327,6 +327,11 @@
       </activation>
       <properties>
         <jpackage.icon>${project.basedir}/src/main/icons/oas-buddy.icns</jpackage.icon>
+        <!-- macOS PKG rejects an app version whose major number is 0, so the placeholder this
+             overrides would fail every build without an explicit version: local ones and manual
+             package.yml runs alike. Still only a placeholder; a release passes its version on the
+             command line, which takes precedence over a profile property. -->
+        <jpackage.appVersion>1.0.0</jpackage.appVersion>
       </properties>
       <build>
         <plugins>
