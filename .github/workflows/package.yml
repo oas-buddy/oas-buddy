@@ -6,11 +6,15 @@ on:
   push:
     tags: ['v*']
 
+# Read-only by default; each job that attaches files to the release asks for write itself (SonarCloud
+# githubactions:S8233 — a write grant belongs on the job that needs it, not on every job).
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   jpackage:
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
@@ -74,6 +78,8 @@ jobs:
     # needs: waits for the whole matrix, and one failed leg would otherwise skip this job. Only the
     # Linux leg's artifact matters here; if that leg failed, the download step fails instead.
     if: ${{ !cancelled() }}
+    permissions:
+      contents: write
     runs-on: ubuntu-24.04
     container: archlinux:base-devel
     env:
